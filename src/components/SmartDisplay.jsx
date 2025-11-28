@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapPin, Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Wind, Settings, X, Save, Moon, AlertTriangle, PlayCircle } from 'lucide-react';
 import { Solar, Lunar } from 'lunar-javascript';
+import { Capacitor } from '@capacitor/core';
 
 // =================================================================================
 // 🎨 Pro级 样式与动画定义 (Premium Visuals)
@@ -515,6 +516,7 @@ const SmartDisplay = () => {
     const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('config_server_url') || '');
     const [useRemoteConfig, setUseRemoteConfig] = useState(() => localStorage.getItem('use_remote_config') === 'true');
     const [deviceIP, setDeviceIP] = useState('');
+    const [serverStatus, setServerStatus] = useState('');
 
     const [weather, setWeather] = useState({
         state: "sunny",
@@ -985,13 +987,18 @@ const SmartDisplay = () => {
                                             <div className="space-y-3">
                                                 <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                                                     <p className="text-xs text-white/60 mb-2">📱 远程配置地址</p>
+                                                    {Capacitor.isNativePlatform() && (
+                                                        <p className="text-xs text-yellow-400 mb-2">
+                                                            服务器状态: {localStorage.getItem('server_status') || '启动中...'}
+                                                        </p>
+                                                    )}
                                                     <p className="text-white font-mono text-sm mb-3 break-all">
-                                                        {deviceIP ? `http://${deviceIP}:${window.location.protocol === 'capacitor:' ? '8080' : window.location.port}/config.html` : '正在获取IP地址...'}
+                                                        {deviceIP ? `http://${deviceIP}:${Capacitor.isNativePlatform() ? '8080' : (window.location.port || '80')}/config.html` : '正在获取IP地址...'}
                                                     </p>
                                                     {deviceIP && (
                                                         <div className="bg-white p-2 rounded-lg w-32 mx-auto">
                                                             <img 
-                                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`http://${deviceIP}:${window.location.protocol === 'capacitor:' ? '8080' : window.location.port}/config.html`)}`}
+                                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`http://${deviceIP}:${Capacitor.isNativePlatform() ? '8080' : (window.location.port || '80')}/config.html`)}`}
                                                                 alt="QR Code"
                                                                 className="w-full h-auto"
                                                             />

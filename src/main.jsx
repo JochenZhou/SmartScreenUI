@@ -15,9 +15,17 @@ if (Capacitor.isNativePlatform()) {
   KeepAwake.keepAwake().catch(() => {})
   
   // 启动 HTTP 服务器
-  HttpServer.start({ port: 8080 })
-    .then(() => console.log('HTTP Server started on port 8080'))
-    .catch(err => console.error('Failed to start HTTP server:', err))
+  setTimeout(() => {
+    HttpServer.start({ port: 8080 })
+      .then(() => {
+        console.log('✅ HTTP Server started on port 8080')
+        localStorage.setItem('server_status', 'running')
+      })
+      .catch(err => {
+        console.error('❌ Failed to start HTTP server:', err)
+        localStorage.setItem('server_status', 'error: ' + err)
+      })
+  }, 1000)
 }
 
 createRoot(document.getElementById('root')).render(
