@@ -5,11 +5,19 @@ import App from './App.jsx'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { KeepAwake } from '@capacitor-community/keep-awake'
 import { Capacitor } from '@capacitor/core'
+import { registerPlugin } from '@capacitor/core'
+
+const HttpServer = registerPlugin('HttpServer')
 
 if (Capacitor.isNativePlatform()) {
   StatusBar.hide().catch(() => {})
   StatusBar.setStyle({ style: Style.Dark }).catch(() => {})
   KeepAwake.keepAwake().catch(() => {})
+  
+  // 启动 HTTP 服务器
+  HttpServer.start({ port: 8080 })
+    .then(() => console.log('HTTP Server started on port 8080'))
+    .catch(err => console.error('Failed to start HTTP server:', err))
 }
 
 createRoot(document.getElementById('root')).render(

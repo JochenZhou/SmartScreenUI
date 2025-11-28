@@ -115,12 +115,6 @@
         <h1>🖥️ Smart Screen</h1>
         <p class="subtitle">配置管理</p>
         
-        <div id="ipInfo" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center;">
-            <div style="font-size: 12px; opacity: 0.9; margin-bottom: 8px;">📱 其他设备访问地址</div>
-            <div id="ipAddress" style="font-family: monospace; font-size: 16px; font-weight: 600; margin-bottom: 15px;">获取中...</div>
-            <div id="qrcode" style="background: white; padding: 15px; border-radius: 10px; display: inline-block;"></div>
-        </div>
-        
         <div id="status" class="status hidden"></div>
 
         <div class="section">
@@ -181,40 +175,6 @@
 
     <script>
         let demoMode = false;
-
-        // Get device IP and generate QR code
-        async function getDeviceIP() {
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                return data.ip;
-            } catch (error) {
-                // Try to get local IP
-                try {
-                    const pc = new RTCPeerConnection({iceServers: []});
-                    pc.createDataChannel('');
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    const localIP = ((pc.localDescription?.sdp || '').match(/c=IN IP4 ([\d.]+)/) || [])[1];
-                    return localIP && localIP !== '0.0.0.0' ? localIP : window.location.hostname;
-                } catch (e) {
-                    return window.location.hostname;
-                }
-            }
-        }
-
-        async function displayIPInfo() {
-            const ip = await getDeviceIP();
-            const url = `http://${ip}/config.html`;
-            document.getElementById('ipAddress').textContent = url;
-            
-            // Generate QR code
-            const qrImg = document.createElement('img');
-            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
-            qrImg.style.width = '100%';
-            qrImg.style.height = 'auto';
-            document.getElementById('qrcode').appendChild(qrImg);
-        }
 
         function loadConfig() {
             const config = JSON.parse(localStorage.getItem('smart_screen_config') || '{}');

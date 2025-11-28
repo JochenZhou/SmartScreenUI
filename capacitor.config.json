@@ -1,5 +1,5 @@
 {
-  "appId": "com.smartscreen.app",
+  "appId": "com.smartscreen.weather",
   "appName": "Smart Weather Display",
   "webDir": "dist",
   "server": {
