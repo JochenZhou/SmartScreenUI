@@ -13,33 +13,11 @@ dist-ssr
 *.local
 
 # Capacitor
-android/*
-!android/gradle/
-!android/gradlew
-!android/gradlew.bat
-!android/build.gradle
-!android/settings.gradle
-!android/gradle.properties
-!android/variables.gradle
-!android/capacitor.settings.gradle
-!android/app/
-android/app/*
-!android/app/src/
-android/app/src/*
-!android/app/src/main/
-android/app/src/main/*
-!android/app/src/main/res/
-android/app/src/main/res/*
-!android/app/src/main/res/mipmap-*/
-!android/app/src/main/java/
-android/app/src/main/java/*
-!android/app/src/main/java/com/
-android/app/src/main/java/com/*
-!android/app/src/main/java/com/smartscreen/
-android/app/src/main/java/com/smartscreen/*
-!android/app/src/main/java/com/smartscreen/weather/
-!android/app/build.gradle
-!android/app/src/main/AndroidManifest.xml
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+android/local.properties
 ios/
 
 # Editor directories and files
