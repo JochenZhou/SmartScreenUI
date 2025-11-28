@@ -44,6 +44,7 @@ if (existsSync(androidDir)) {
       mkdirSync(dir, { recursive: true });
     }
     
+    // Regular icon
     const outputPath = `${dir}/ic_launcher.png`;
     await sharp(inputLogo)
       .resize(size, size, {
@@ -53,7 +54,17 @@ if (existsSync(androidDir)) {
       .png()
       .toFile(outputPath);
     
-    console.log(`✅ Generated ${outputPath}`);
+    // Round icon
+    const roundPath = `${dir}/ic_launcher_round.png`;
+    await sharp(inputLogo)
+      .resize(size, size, {
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
+      })
+      .png()
+      .toFile(roundPath);
+    
+    console.log(`✅ Generated ${outputPath} and ${roundPath}`);
   }
 }
 

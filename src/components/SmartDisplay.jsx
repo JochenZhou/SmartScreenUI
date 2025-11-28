@@ -510,10 +510,12 @@ const SmartDisplay = () => {
     const [editConfig, setEditConfig] = useState(config);
     const [showSettings, setShowSettings] = useState(false);
     const [fetchError, setFetchError] = useState(null);
-    const [demoMode, setDemoMode] = useState(false);
-    const [demoState, setDemoState] = useState('RAIN');
+    const [demoMode, setDemoMode] = useState(() => localStorage.getItem('demo_mode') === 'true');
+    const [demoState, setDemoState] = useState(() => localStorage.getItem('demo_state') || 'CLEAR_DAY');
     const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('config_server_url') || '');
     const [useRemoteConfig, setUseRemoteConfig] = useState(() => localStorage.getItem('use_remote_config') === 'true');
+    const [deviceIP, setDeviceIP] = useState('');
+    const [showQR, setShowQR] = useState(false);
 
     const [weather, setWeather] = useState({
         state: "sunny",
@@ -531,9 +533,35 @@ const SmartDisplay = () => {
         return () => clearInterval(timer);
     }, []);
 
+    // --- 1.5. 获取设备 IP 地址 ---
+    useEffect(() => {
+        const getIP = async () => {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                setDeviceIP(data.ip);
+            } catch (error) {
+                // 尝试局域网 IP
+                try {
+                    const pc = new RTCPeerConnection({iceServers: []});
+                    pc.createDataChannel('');
+                    const offer = await pc.createOffer();
+                    await pc.setLocalDescription(offer);
+                    const localIP = ((pc.localDescription?.sdp || '').match(/c=IN IP4 ([\d.]+)/) || [])[1];
+                    if (localIP && localIP !== '0.0.0.0') setDeviceIP(localIP);
+                } catch (e) {
+                    console.error('Failed to get IP:', e);
+                }
+            }
+        };
+        getIP();
+    }, []);
+
     // --- 2. 获取 Home Assistant 天气数据 ---
     useEffect(() => {
         if (demoMode) {
+            localStorage.setItem('demo_mode', 'true');
+            localStorage.setItem('demo_state', demoState);
             setWeather({
                 state: demoState,
                 mappedKey: normalizeWeatherState(demoState),
@@ -631,6 +659,7 @@ const SmartDisplay = () => {
     const handleSaveConfig = () => {
         localStorage.setItem('smart_screen_config', JSON.stringify(editConfig));
         setConfig(editConfig);
+        localStorage.setItem('demo_mode', 'false');
         setDemoMode(false);
         setShowSettings(false);
     };
@@ -794,6 +823,19 @@ const SmartDisplay = () => {
 
                         {/* Status Icons - Glassmorphism */}
                         <div className="flex items-center space-x-5">
+                            {deviceIP && (
+                                <button onClick={() => setShowQR(true)} className="transition-all hover:scale-110 focus:outline-none drop-shadow-md text-white/90 hover:text-white" title="显示配置二维码">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="3" width="7" height="7"/>
+                                        <rect x="14" y="3" width="7" height="7"/>
+                                        <rect x="3" y="14" width="7" height="7"/>
+                                        <rect x="14" y="14" width="7" height="7"/>
+                                    </svg>
+                                </button>
+                            )}
+                            <button onClick={() => window.location.href = '/config.html'} className="transition-all hover:scale-110 focus:outline-none drop-shadow-md text-white/90 hover:text-white" title="远程配置">
+                                <Settings size={24} />
+                            </button>
                             <button onClick={handleOpenSettings} className={`transition-all hover:scale-110 focus:outline-none drop-shadow-md relative ${fetchError ? 'text-red-400 animate-pulse' : 'text-white/90 hover:text-white'}`}>
                                 <Settings size={24} />
                                 {fetchError && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-black box-content"></span>}
@@ -1031,6 +1073,34 @@ const SmartDisplay = () => {
                                         Save Changes
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* QR Code Modal */}
+                    {showQR && deviceIP && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl" onClick={() => setShowQR(false)}>
+                            <div className="bg-white rounded-3xl p-8 max-w-md" onClick={(e) => e.stopPropagation()}>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">远程配置</h2>
+                                <p className="text-gray-600 text-sm mb-6 text-center">扫描二维码或访问以下地址</p>
+                                <div className="bg-white p-4 rounded-xl border-4 border-gray-200 mb-4">
+                                    <img 
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`http://${deviceIP}/config.html`)}`}
+                                        alt="QR Code"
+                                        className="w-full h-auto"
+                                    />
+                                </div>
+                                <div className="bg-gray-100 rounded-xl p-4 mb-4">
+                                    <p className="text-center font-mono text-sm text-gray-700 break-all">
+                                        http://{deviceIP}/config.html
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => setShowQR(false)}
+                                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all"
+                                >
+                                    关闭
+                                </button>
                             </div>
                         </div>
                     )}
