@@ -14,6 +14,12 @@ dist-ssr
 
 # Capacitor
 android/*
+!android/gradle/
+!android/gradlew
+!android/gradlew.bat
+!android/build.gradle
+!android/settings.gradle
+!android/gradle.properties
 !android/app/
 android/app/*
 !android/app/src/
