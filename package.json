@@ -1,7 +1,7 @@
 {
   "name": "smart-screen-ui",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,17 +9,19 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server.js",
+    "generate-icons": "node generate-icons.js",
     "cap:init": "cap init",
     "cap:add": "cap add android",
     "cap:sync": "cap sync",
     "cap:open": "cap open android",
-    "build:android": "npm run build && cap sync"
+    "update-version": "node update-version.js",
+    "build:android": "npm run build && cap sync && npm run update-version"
   },
   "dependencies": {
+    "@capacitor-community/keep-awake": "^5.0.0",
     "@capacitor/android": "^6.0.0",
     "@capacitor/core": "^6.0.0",
     "@capacitor/status-bar": "^6.0.0",
-    "@capacitor-community/keep-awake": "^5.0.0",
     "autoprefixer": "^10.4.17",
     "cors": "^2.8.5",
     "express": "^4.18.2",
@@ -41,6 +43,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "sharp": "^0.34.5",
     "vite": "^7.2.4"
   }
 }

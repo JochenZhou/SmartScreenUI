@@ -503,7 +503,7 @@ const SmartDisplay = () => {
             ha_url: "",
             ha_token: "",
             weather_entity: "weather.forecast_home",
-            location_name: "罗庄区"
+            location_name: "北京市"
         };
     });
 
@@ -599,16 +599,26 @@ const SmartDisplay = () => {
         
         const loadRemoteConfig = async () => {
             try {
-                const response = await fetch(`${serverUrl}/api/config`);
+                const cleanUrl = serverUrl.trim().replace(/\/$/, '');
+                const apiUrl = cleanUrl.includes('/api/config') ? cleanUrl : `${cleanUrl}/api/config`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors'
+                });
+                
                 if (response.ok) {
                     const remoteConfig = await response.json();
                     setConfig(remoteConfig);
                     setEditConfig(remoteConfig);
                     if (remoteConfig.demo_mode !== undefined) setDemoMode(remoteConfig.demo_mode);
                     if (remoteConfig.demo_state) setDemoState(remoteConfig.demo_state);
+                    setFetchError(null);
                 }
             } catch (error) {
                 console.error('Remote config sync failed:', error);
+                setFetchError('远程配置连接失败');
             }
         };
         
@@ -797,7 +807,7 @@ const SmartDisplay = () => {
                         {/* Left Info Column */}
                         <div className="col-span-5 flex flex-col justify-between pt-8 pb-4 pl-2">
                             <div>
-                                <h1 className="text-[140px] leading-none font-thin tracking-tighter text-white w-full drop-shadow-2xl font-[Helvetica Neue,Arial,sans-serif]">
+                                <h1 className="text-[140px] leading-none font-bold tracking-tighter text-white w-full drop-shadow-2xl font-[Helvetica Neue,Arial,sans-serif]">
                                     {formatTime(now)}
                                 </h1>
 
@@ -815,10 +825,10 @@ const SmartDisplay = () => {
 
                             {/* Lunar Info - Elegant Typography */}
                             <div className="space-y-1 mb-6 drop-shadow-md border-l-2 border-white/30 pl-4">
-                                <div className="text-2xl font-light text-white tracking-[0.2em] font-serif min-h-[2rem] drop-shadow-md">
+                                <div className="text-2xl font-light text-white tracking-[0.2em] min-h-[2rem] drop-shadow-md" style={{fontFamily: 'KaiTi, STKaiti, SimKai, serif'}}>
                                     {lunarData.dayStr}
                                 </div>
-                                <div className="text-sm text-white/70 tracking-widest uppercase font-sans min-h-[1.75rem] drop-shadow-md">
+                                <div className="text-sm text-white/70 tracking-widest uppercase min-h-[1.75rem] drop-shadow-md" style={{fontFamily: 'KaiTi, STKaiti, SimKai, serif'}}>
                                     {lunarData.yearStr}
                                 </div>
                             </div>

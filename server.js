@@ -20,7 +20,7 @@ if (!existsSync(CONFIG_FILE)) {
     ha_url: "",
     ha_token: "",
     weather_entity: "weather.forecast_home",
-    location_name: "罗庄区",
+    location_name: "北京市",
     demo_mode: false,
     demo_state: "CLEAR_DAY"
   }, null, 2));
