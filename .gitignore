@@ -20,6 +20,8 @@ android/*
 !android/build.gradle
 !android/settings.gradle
 !android/gradle.properties
+!android/variables.gradle
+!android/capacitor.settings.gradle
 !android/app/
 android/app/*
 !android/app/src/
