@@ -30,3 +30,6 @@ ios/
 *.njsproj
 *.sln
 *.sw?
+
+# Keystore
+android/release.keystore
