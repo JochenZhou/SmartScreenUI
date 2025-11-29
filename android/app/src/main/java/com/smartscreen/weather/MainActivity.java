@@ -32,7 +32,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         // 从后台恢复时确保背景色
         getWindow().getDecorView().setBackgroundColor(Color.parseColor("#1a1a2e"));
