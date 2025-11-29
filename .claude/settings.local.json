@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat:*)",
+      "Bash(ss:*)",
+      "Bash(lsof:*)",
+      "Bash(fuser:*)",
+      "Bash(curl:*)",
+      "Bash(npm run dev)",
+      "Bash(npx vite --host)",
+      "Bash(chmod:*)",
+      "Bash(npm install @rollup/rollup-linux-x64-gnu)",
+      "Bash(npm run dev:*)",
+      "Bash(kill:*)",
+      "Bash(npm run server)",
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(gh auth:*)",
+      "Bash(brew install:*)",
+      "Bash(sudo apt update:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg)",
+      "Bash(sudo chmod:*)",
+      "Bash(sudo tee:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
