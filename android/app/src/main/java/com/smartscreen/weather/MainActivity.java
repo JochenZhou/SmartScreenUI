@@ -13,8 +13,8 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         registerPlugin(HttpServerPlugin.class);
+        super.onCreate(savedInstanceState);
         
         // 设置窗口和WebView背景色，防止切换时白屏
         getWindow().setBackgroundDrawableResource(android.R.color.black);
