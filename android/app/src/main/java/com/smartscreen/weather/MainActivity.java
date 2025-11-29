@@ -1,5 +1,6 @@
 package com.smartscreen.weather;
 
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -15,6 +16,10 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         registerPlugin(HttpServerPlugin.class);
         
+        // 设置窗口和WebView背景色，防止切换时白屏
+        getWindow().setBackgroundDrawableResource(android.R.color.black);
+        getWindow().getDecorView().setBackgroundColor(Color.parseColor("#1a1a2e"));
+        
         // 全面屏适配 - 延伸到刘海区域
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             WindowManager.LayoutParams lp = getWindow().getAttributes();
@@ -24,6 +29,13 @@ public class MainActivity extends BridgeActivity {
         
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         hideSystemUI();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 从后台恢复时确保背景色
+        getWindow().getDecorView().setBackgroundColor(Color.parseColor("#1a1a2e"));
     }
 
     @Override

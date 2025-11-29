@@ -16,9 +16,9 @@ if (Capacitor.isNativePlatform()) {
   
   // 启动 HTTP 服务器
   setTimeout(() => {
-    HttpServer.start({ port: 8080 })
+    HttpServer.start({ port: 3001 })
       .then(() => {
-        console.log('✅ HTTP Server started on port 8080')
+        console.log('✅ HTTP Server started on port 3001')
         localStorage.setItem('server_status', 'running')
       })
       .catch(err => {

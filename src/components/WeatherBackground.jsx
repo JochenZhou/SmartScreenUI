@@ -1,6 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 const WeatherBackground = ({ weatherKey, festival }) => {
+    const [displayFestival, setDisplayFestival] = useState(festival);
+    const [festivalOpacity, setFestivalOpacity] = useState(festival ? 1 : 0);
+
+    useEffect(() => {
+        if (festival) {
+            setDisplayFestival(festival);
+            setFestivalOpacity(1);
+        } else if (displayFestival) {
+            // 淡出后再清除
+            setFestivalOpacity(0);
+            const timer = setTimeout(() => setDisplayFestival(null), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [festival]);
     const getGradient = (key) => {
         switch (true) {
             case key === 'CLEAR_DAY': return 'bg-gradient-to-br from-blue-900 via-blue-700 to-blue-400';
@@ -203,10 +217,11 @@ const WeatherBackground = ({ weatherKey, festival }) => {
         }))
     }), []);
 
-    const renderFestivalAtmosphere = (fest) => {
+    const renderFestivalAtmosphere = (fest, opacity) => {
         if (!fest) return null;
-        const containerClass = "absolute bottom-0 left-0 w-[45%] h-[60%] z-20 pointer-events-none overflow-hidden";
-        const maskStyle = { maskImage: 'radial-gradient(circle at bottom left, black 40%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle at bottom left, black 40%, transparent 100%)' };
+        const containerClass = "absolute bottom-0 left-0 w-[45%] h-[60%] z-20 pointer-events-none overflow-hidden transition-opacity duration-1000";
+        const maskGradient = 'linear-gradient(to top, black 0%, black 60%, transparent 100%), linear-gradient(to right, black 0%, black 60%, transparent 100%)';
+        const maskStyle = { opacity, maskImage: maskGradient, WebkitMaskImage: maskGradient, maskComposite: 'intersect', WebkitMaskComposite: 'source-in' };
 
         // 春节/元宵/除夕/国庆/元旦/腊八/重阳 - 红灯笼/红包/鞭炮
         if (['春节', '元宵', '除夕', '国庆', '元旦', '腊八', '重阳'].some(k => fest.includes(k))) {
@@ -378,7 +393,7 @@ const WeatherBackground = ({ weatherKey, festival }) => {
             {renderPrecipitation(weatherKey)}
             {renderLightning(weatherKey)}
             {renderFog(weatherKey)}
-            {renderFestivalAtmosphere(festival)}
+            {renderFestivalAtmosphere(displayFestival, festivalOpacity)}
         </div>
     );
 };
