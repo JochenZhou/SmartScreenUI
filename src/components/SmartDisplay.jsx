@@ -105,11 +105,6 @@ const SmartDisplay = () => {
 
             const cleanUrl = config.ha_url.replace(/\/$/, '');
 
-            if (window.location.protocol === 'https:' && cleanUrl.startsWith('http:')) {
-                setFetchError("混合内容错误：无法在 HTTPS 页面中请求 HTTP 地址。");
-                return;
-            }
-
             try {
                 const response = await fetch(`${cleanUrl}/api/states/${config.weather_entity}`, {
                     method: 'GET',
