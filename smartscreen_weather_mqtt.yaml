@@ -1,0 +1,63 @@
+blueprint:
+  name: SmartScreen 天气数据推送
+  description: 将天气实体数据通过 MQTT 推送到 SmartScreen
+  domain: automation
+  input:
+    weather_entity:
+      name: 天气实体
+      description: 选择要推送的天气实体
+      selector:
+        entity:
+          domain: weather
+    mqtt_topic:
+      name: MQTT 主题
+      description: 推送的 MQTT 主题
+      default: smartscreen/weather/state
+      selector:
+        text:
+    update_interval:
+      name: 更新间隔（分钟）
+      description: 定时推送的间隔时间
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 60
+          unit_of_measurement: 分钟
+
+trigger:
+  - platform: state
+    entity_id: !input weather_entity
+  - platform: time_pattern
+    minutes: !input update_interval
+
+action:
+  - service: mqtt.publish
+    target:
+      entity_id: !input weather_entity
+    data:
+      topic: !input mqtt_topic
+      retain: true
+      payload_template: >
+        {% set entity = !input weather_entity %}
+        {% set attrs = state_attr(entity) | default({}) %}
+        {{ {
+          'state': states(entity),
+          'temperature': attrs.temperature,
+          'friendly_name': attrs.friendly_name,
+          'attributes': {
+            'temperature': attrs.temperature,
+            'humidity': attrs.humidity,
+            'pressure': attrs.pressure,
+            'wind_speed': attrs.wind_speed,
+            'wind_bearing': attrs.wind_bearing,
+            'visibility': attrs.visibility,
+            'forecast': attrs.forecast,
+            'skycon': attrs.skycon,
+            'condition_cn': attrs.condition_cn,
+            'qweather_icon': attrs.qweather_icon,
+            'friendly_name': attrs.friendly_name
+          }
+        } | tojson }}
+
+mode: single

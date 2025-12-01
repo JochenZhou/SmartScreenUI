@@ -23,7 +23,10 @@
       "Bash(sudo apt install:*)",
       "Bash(sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg)",
       "Bash(sudo chmod:*)",
-      "Bash(sudo tee:*)"
+      "Bash(sudo tee:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

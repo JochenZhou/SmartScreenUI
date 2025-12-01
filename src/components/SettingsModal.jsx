@@ -1,12 +1,134 @@
-import React from 'react';
-import { Settings, X, Save, AlertTriangle, PlayCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, X, Save, AlertTriangle, PlayCircle, Wifi, CheckCircle, XCircle } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 
 const SettingsModal = ({
     showSettings, setShowSettings, fetchError, demoMode, setDemoMode, demoState, setDemoState,
     demoFestival, setDemoFestival, useRemoteConfig, setUseRemoteConfig, deviceIP,
-    editConfig, setEditConfig, handleSaveConfig, setFetchError
+    editConfig, setEditConfig, handleSaveConfig, setFetchError, mqttConnected
 }) => {
+    const [enableMqtt, setEnableMqtt] = useState(localStorage.getItem('enable_mqtt') !== 'false');
+    const [enableApi, setEnableApi] = useState(localStorage.getItem('enable_api') !== 'false');
+    const [mqttTestResult, setMqttTestResult] = useState(null);
+    const [mqttTestMessage, setMqttTestMessage] = useState('');
+    const [apiTestResult, setApiTestResult] = useState(null);
+    const [apiTestMessage, setApiTestMessage] = useState('');
+
+    const testMqttConnection = async () => {
+        setMqttTestResult('testing');
+        setMqttTestMessage('正在测试 MQTT 连接...');
+
+        try {
+            const mqttModule = await import('mqtt');
+            const mqtt = mqttModule.default || mqttModule;
+            const url = `ws://${editConfig.mqtt_host}:${editConfig.mqtt_port || 1884}/`;
+            console.log('Testing MQTT connection to:', url);
+
+            const client = mqtt.connect(url, {
+                username: editConfig.mqtt_username || undefined,
+                password: editConfig.mqtt_password || undefined,
+                connectTimeout: 10000
+            });
+
+            const timeout = setTimeout(() => {
+                client.end(true);
+                setMqttTestResult('error');
+                setMqttTestMessage('✗ 连接超时：无法连接到 MQTT 服务器');
+                setTimeout(() => {
+                    setMqttTestResult(null);
+                    setMqttTestMessage('');
+                }, 5000);
+            }, 10000);
+
+            client.on('connect', () => {
+                clearTimeout(timeout);
+                setMqttTestResult('success');
+                setMqttTestMessage(`✓ MQTT 连接成功！ (${url})`);
+                client.end();
+                setTimeout(() => {
+                    setMqttTestResult(null);
+                    setMqttTestMessage('');
+                }, 5000);
+            });
+
+            client.on('error', (err) => {
+                clearTimeout(timeout);
+                console.error('MQTT test error:', err);
+                setMqttTestResult('error');
+                setMqttTestMessage(`✗ MQTT 连接失败: ${err.message || '未知错误'}`);
+                client.end(true);
+                setTimeout(() => {
+                    setMqttTestResult(null);
+                    setMqttTestMessage('');
+                }, 5000);
+            });
+        } catch (error) {
+            console.error('MQTT test exception:', error);
+            setMqttTestResult('error');
+            setMqttTestMessage(`✗ MQTT 测试异常: ${error.message}`);
+            setTimeout(() => {
+                setMqttTestResult(null);
+                setMqttTestMessage('');
+            }, 5000);
+        }
+    };
+
+    const testApiConnection = async () => {
+        if (!editConfig.ha_url || !editConfig.ha_token) {
+            setApiTestResult('error');
+            setApiTestMessage('请填写服务器地址和令牌');
+            setTimeout(() => {
+                setApiTestResult(null);
+                setApiTestMessage('');
+            }, 5000);
+            return;
+        }
+        setApiTestResult('testing');
+        setApiTestMessage('正在连接...');
+        try {
+            const response = await fetch(`${editConfig.ha_url}/api/`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${editConfig.ha_token}`,
+                    'Content-Type': 'application/json'
+                },
+                mode: 'cors',
+                cache: 'no-cache'
+            });
+
+            if (response.ok) {
+                // 验证响应内容是否真的是 HA API
+                const data = await response.json();
+
+                if (data && data.message && data.message.includes('API running')) {
+                    setApiTestResult('success');
+                    setApiTestMessage('✓ 连接成功！API 正常运行');
+                } else {
+                    setApiTestResult('error');
+                    setApiTestMessage(`✗ 响应异常: ${JSON.stringify(data)}`);
+                }
+                setTimeout(() => {
+                    setApiTestResult(null);
+                    setApiTestMessage('');
+                }, 5000);
+            } else {
+                setApiTestResult('error');
+                setApiTestMessage(`✗ 连接失败: HTTP ${response.status} ${response.statusText}`);
+                setTimeout(() => {
+                    setApiTestResult(null);
+                    setApiTestMessage('');
+                }, 5000);
+            }
+        } catch (error) {
+            setApiTestResult('error');
+            setApiTestMessage(`✗ 网络错误: ${error.message}`);
+            setTimeout(() => {
+                setApiTestResult(null);
+                setApiTestMessage('');
+            }, 5000);
+        }
+    };
+
     if (!showSettings) return null;
 
     return (
@@ -157,32 +279,163 @@ const SettingsModal = ({
                         </div>
                     </div>
 
+                    {/* MQTT Config Section */}
+                    <div className="space-y-2">
+                        <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider ml-4">MQTT 连接</h3>
+                        <div className="bg-[#2c2c2e] rounded-2xl overflow-hidden">
+                            <div className="p-4 flex items-center justify-between border-b border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 bg-orange-500 rounded-lg"><Wifi className="text-white" size={20} /></div>
+                                    <div>
+                                        <p className="text-white font-medium text-[17px]">启用 MQTT</p>
+                                        <p className="text-xs text-gray-400">连接到 MQTT 服务器</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => { setEnableMqtt(!enableMqtt); localStorage.setItem('enable_mqtt', !enableMqtt); }}
+                                    className={`w-[51px] h-[31px] rounded-full relative transition-colors duration-300 ${enableMqtt ? 'bg-[#34c759]' : 'bg-[#39393d]'}`}
+                                >
+                                    <div className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-sm transition-transform duration-300 ${enableMqtt ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+
+                            {enableMqtt && (
+                                <div className="p-4 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Wifi size={16} className={mqttConnected ? 'text-green-500' : 'text-gray-500'} />
+                                            <span className={`text-sm ${mqttConnected ? 'text-green-500' : 'text-gray-500'}`}>
+                                                {mqttConnected ? '已连接' : '未连接'}
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={testMqttConnection}
+                                            disabled={mqttTestResult === 'testing'}
+                                            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                            {mqttTestResult === 'testing' && '测试中...'}
+                                            {mqttTestResult === 'success' && <><CheckCircle size={16} /> 成功</>}
+                                            {mqttTestResult === 'error' && <><XCircle size={16} /> 失败</>}
+                                            {!mqttTestResult && '测试连接'}
+                                        </button>
+                                    </div>
+                                    {mqttTestMessage && (
+                                        <div className={`p-3 rounded-lg text-sm font-mono ${
+                                            mqttTestResult === 'success'
+                                                ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                                : mqttTestResult === 'error'
+                                                ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                                : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                        }`}>
+                                            {mqttTestMessage}
+                                        </div>
+                                    )}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[13px] font-medium text-gray-400 ml-1">MQTT 服务器</label>
+                                            <input type="text" value={editConfig.mqtt_host || ''} onChange={(e) => setEditConfig({ ...editConfig, mqtt_host: e.target.value })} placeholder="192.168.1.100"
+                                                className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[15px] font-mono" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[13px] font-medium text-gray-400 ml-1">WebSocket 端口</label>
+                                            <input type="text" value={editConfig.mqtt_port || ''} onChange={(e) => setEditConfig({ ...editConfig, mqtt_port: e.target.value })} placeholder="1884"
+                                                className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[15px] font-mono" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[13px] font-medium text-gray-400 ml-1">用户名</label>
+                                            <input type="text" value={editConfig.mqtt_username || ''} onChange={(e) => setEditConfig({ ...editConfig, mqtt_username: e.target.value })} placeholder="可选"
+                                                className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[15px]" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[13px] font-medium text-gray-400 ml-1">密码</label>
+                                            <input type="password" value={editConfig.mqtt_password || ''} onChange={(e) => setEditConfig({ ...editConfig, mqtt_password: e.target.value })} placeholder="可选"
+                                                className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[15px]" />
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-gray-500 ml-1">连接后会自动在 HA 中创建演示模式和天气实体控制</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* HA Config Section - iOS Grouped Style */}
                     <div className="space-y-2">
                         <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider ml-4">Home Assistant 连接</h3>
-                        <div className="bg-[#2c2c2e] rounded-2xl overflow-hidden p-4 space-y-4">
-                            <div className="space-y-1">
-                                <label className="text-[13px] font-medium text-gray-400 ml-1">服务器地址</label>
-                                <input type="text" value={editConfig.ha_url} onChange={(e) => setEditConfig({ ...editConfig, ha_url: e.target.value })} placeholder="http://192.168.1.100:8123"
-                                    className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[17px]" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[13px] font-medium text-gray-400 ml-1">长期访问令牌</label>
-                                <textarea value={editConfig.ha_token} onChange={(e) => setEditConfig({ ...editConfig, ha_token: e.target.value })} placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                                    className="w-full h-24 bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-[13px] resize-none leading-relaxed" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[13px] font-medium text-gray-400 ml-1">实体 ID</label>
-                                    <input type="text" value={editConfig.weather_entity} onChange={(e) => setEditConfig({ ...editConfig, weather_entity: e.target.value })} placeholder="weather.home"
-                                        className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[15px] font-mono" />
+                        <div className="bg-[#2c2c2e] rounded-2xl overflow-hidden">
+                            <div className="p-4 flex items-center justify-between border-b border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 bg-green-500 rounded-lg"><Settings className="text-white" size={20} /></div>
+                                    <div>
+                                        <p className="text-white font-medium text-[17px]">启用 API</p>
+                                        <p className="text-xs text-gray-400">连接到 Home Assistant</p>
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-[13px] font-medium text-gray-400 ml-1">位置名称</label>
-                                    <input type="text" value={editConfig.location_name} onChange={(e) => setEditConfig({ ...editConfig, location_name: e.target.value })} placeholder="客厅"
-                                        className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[15px]" />
-                                </div>
+                                <button
+                                    onClick={() => { setEnableApi(!enableApi); localStorage.setItem('enable_api', !enableApi); }}
+                                    className={`w-[51px] h-[31px] rounded-full relative transition-colors duration-300 ${enableApi ? 'bg-[#34c759]' : 'bg-[#39393d]'}`}
+                                >
+                                    <div className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-sm transition-transform duration-300 ${enableApi ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                                </button>
                             </div>
+
+                            {enableApi && (
+                                <div className="p-4 space-y-4">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm text-gray-400">
+                                                    {(!editConfig.ha_url || !editConfig.ha_token) ? '请填写配置参数' : '配置已填写'}
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={testApiConnection}
+                                                disabled={apiTestResult === 'testing'}
+                                                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+                                            >
+                                                {apiTestResult === 'testing' && '测试中...'}
+                                                {apiTestResult === 'success' && <><CheckCircle size={16} /> 成功</>}
+                                                {apiTestResult === 'error' && <><XCircle size={16} /> 失败</>}
+                                                {!apiTestResult && '测试连接'}
+                                            </button>
+                                        </div>
+                                        {apiTestMessage && (
+                                            <div className={`p-3 rounded-lg text-sm font-mono ${
+                                                apiTestResult === 'success'
+                                                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                                    : apiTestResult === 'error'
+                                                    ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                                    : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                            }`}>
+                                                {apiTestMessage}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[13px] font-medium text-gray-400 ml-1">服务器地址</label>
+                                        <input type="text" value={editConfig.ha_url} onChange={(e) => setEditConfig({ ...editConfig, ha_url: e.target.value })} placeholder="http://192.168.1.100:8123"
+                                            className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[17px]" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[13px] font-medium text-gray-400 ml-1">长期访问令牌</label>
+                                        <textarea value={editConfig.ha_token} onChange={(e) => setEditConfig({ ...editConfig, ha_token: e.target.value })} placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                            className="w-full h-24 bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-[13px] resize-none leading-relaxed" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[13px] font-medium text-gray-400 ml-1">实体 ID</label>
+                                            <input type="text" value={editConfig.weather_entity} onChange={(e) => setEditConfig({ ...editConfig, weather_entity: e.target.value })} placeholder="weather.home"
+                                                className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[15px] font-mono" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[13px] font-medium text-gray-400 ml-1">位置名称</label>
+                                            <input type="text" value={editConfig.location_name} onChange={(e) => setEditConfig({ ...editConfig, location_name: e.target.value })} placeholder="客厅"
+                                                className="w-full bg-[#1c1c1e] border-none rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-blue-500/50 transition-all text-[15px]" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

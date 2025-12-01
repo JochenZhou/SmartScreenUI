@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapPin, Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Wind, Settings, Moon } from 'lucide-react';
+import { MapPin, Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Wind, Settings, Moon, CloudFog, CloudHail, CloudDrizzle } from 'lucide-react';
 import { Solar, Lunar } from 'lunar-javascript';
 import { Capacitor } from '@capacitor/core';
 import WeatherStyles from './WeatherStyles';
 import WeatherBackground from './WeatherBackground';
 import SettingsModal from './SettingsModal';
 import { CONDITION_CN_MAP, QWEATHER_ICON_MAP, normalizeWeatherState } from './weatherUtils';
+import { mqttService } from '../services/mqttService';
 
 
 
@@ -18,12 +19,17 @@ const SmartDisplay = () => {
 
     const [config, setConfig] = useState(() => {
         const saved = localStorage.getItem('smart_screen_config');
-        return saved ? JSON.parse(saved) : {
+        const defaults = {
             ha_url: "",
             ha_token: "",
             weather_entity: "weather.wo_de_jia_2",
-            location_name: ""
+            location_name: "",
+            mqtt_host: "",
+            mqtt_port: "1884",
+            mqtt_username: "",
+            mqtt_password: ""
         };
+        return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
     });
 
     const [editConfig, setEditConfig] = useState(config);
@@ -36,6 +42,7 @@ const SmartDisplay = () => {
     const [useRemoteConfig, setUseRemoteConfig] = useState(() => localStorage.getItem('use_remote_config') === 'true');
     const [deviceIP, setDeviceIP] = useState('');
     const [serverStatus, setServerStatus] = useState('');
+    const [mqttConnected, setMqttConnected] = useState(false);
 
     const [weather, setWeather] = useState({
         state: "sunny",
@@ -52,6 +59,61 @@ const SmartDisplay = () => {
         const timer = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
+
+    // --- MQTT 连接 ---
+    useEffect(() => {
+        if (config.mqtt_host) {
+            mqttService.onConnectionChange = (connected) => {
+                setMqttConnected(connected);
+                // 当 MQTT 连接成功时，清除之前的错误提示
+                if (connected) {
+                    setFetchError(null);
+                }
+            };
+            mqttService.onDemoModeUpdate = (update) => {
+                if (update.demo_mode !== undefined) {
+                    setDemoMode(update.demo_mode);
+                    localStorage.setItem('demo_mode', update.demo_mode);
+                }
+                if (update.demo_state) {
+                    setDemoState(update.demo_state);
+                    localStorage.setItem('demo_state', update.demo_state);
+                }
+                if (update.demo_festival !== undefined) {
+                    setDemoFestival(update.demo_festival);
+                    localStorage.setItem('demo_festival', update.demo_festival);
+                }
+            };
+            mqttService.onWeatherUpdate = (update) => {
+                if (update.weather_entity) {
+                    setConfig(prev => ({ ...prev, weather_entity: update.weather_entity }));
+                    setEditConfig(prev => ({ ...prev, weather_entity: update.weather_entity }));
+                }
+            };
+            mqttService.onWeatherDataUpdate = (data) => {
+                // 接收 HA 通过 MQTT 推送的天气数据
+                if (data.state) {
+                    const mappedKey = normalizeWeatherState(data.state);
+                    setWeather({
+                        state: data.state,
+                        mappedKey,
+                        temperature: data.temperature ?? weather.temperature,
+                        attributes: data.attributes || {},
+                        friendlyName: data.friendly_name || ''
+                    });
+                }
+            };
+            mqttService.connect(config);
+        }
+        return () => mqttService.disconnect();
+    }, [config.mqtt_host, config.mqtt_port, config.mqtt_username, config.mqtt_password]);
+
+    // --- 同步状态到 MQTT ---
+    useEffect(() => {
+        if (mqttConnected) {
+            mqttService.publishState({ demo_mode: demoMode, demo_state: demoState, demo_festival: demoFestival, weather_entity: config.weather_entity });
+        }
+    }, [mqttConnected, demoMode, demoState, demoFestival, config.weather_entity]);
 
     // --- 1.5. 获取局域网 IP 地址 ---
     useEffect(() => {
@@ -99,7 +161,10 @@ const SmartDisplay = () => {
 
         const fetchWeather = async () => {
             if (!config.ha_url || !config.ha_token) {
-                setFetchError("请先配置 HA 地址和 Token");
+                // 如果 MQTT 已连接，就不显示错误提示
+                if (!mqttConnected) {
+                    setFetchError("请先配置 HA 地址和 Token");
+                }
                 return;
             }
 
@@ -344,10 +409,13 @@ const SmartDisplay = () => {
         if (key.includes('CLEAR_NIGHT')) return <Moon {...props} />;
         if (key.includes('CLEAR')) return <Sun {...props} fill="#fcd34d" className="text-yellow-300 drop-shadow-[0_0_10px_rgba(253,224,71,0.5)]" />;
         if (key.includes('PARTLY') || key.includes('CLOUDY')) return <Cloud {...props} />;
-        if (key.includes('RAIN') || key === 'SLEET') return <CloudRain {...props} />;
-        if (key.includes('SNOW')) return <CloudSnow {...props} />;
+        if (key.includes('HAIL')) return <CloudHail {...props} />;
         if (key.includes('THUNDER')) return <CloudLightning {...props} />;
-        if (key.includes('WIND')) return <Wind {...props} />;
+        if (key === 'SLEET') return <CloudDrizzle {...props} />;
+        if (key.includes('RAIN')) return <CloudRain {...props} />;
+        if (key.includes('SNOW')) return <CloudSnow {...props} />;
+        if (key.includes('HAZE') || key.includes('FOG')) return <CloudFog {...props} />;
+        if (key.includes('DUST') || key.includes('SAND') || key.includes('WIND')) return <Wind {...props} />;
         return <Sun {...props} fill="#fcd34d" className="text-yellow-300" />;
     };
 
@@ -483,7 +551,7 @@ const SmartDisplay = () => {
                         demoFestival={demoFestival} setDemoFestival={setDemoFestival}
                         useRemoteConfig={useRemoteConfig} setUseRemoteConfig={setUseRemoteConfig}
                         deviceIP={deviceIP} editConfig={editConfig} setEditConfig={setEditConfig}
-                        handleSaveConfig={handleSaveConfig}
+                        handleSaveConfig={handleSaveConfig} mqttConnected={mqttConnected}
                     />
 
                 </div>
