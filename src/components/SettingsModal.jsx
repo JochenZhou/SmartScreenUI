@@ -5,7 +5,8 @@ import { Capacitor } from '@capacitor/core';
 const SettingsModal = ({
     showSettings, setShowSettings, fetchError, demoMode, setDemoMode, demoState, setDemoState,
     demoFestival, setDemoFestival, displayMode, setDisplayMode, showSeconds, setShowSeconds,
-    cardColor, setCardColor, cardOpacity, setCardOpacity, useRemoteConfig, setUseRemoteConfig, deviceIP,
+    cardColor, setCardColor, cardOpacity, setCardOpacity, useDynamicColor, setUseDynamicColor,
+    useRemoteConfig, setUseRemoteConfig, deviceIP,
     editConfig, setEditConfig, handleSaveConfig, setFetchError, mqttConnected
 }) => {
     const [enableMqtt, setEnableMqtt] = useState(localStorage.getItem('enable_mqtt') !== 'false');
@@ -271,13 +272,27 @@ const SettingsModal = ({
                                         </label>
                                     </div>
                                     <div className="p-4 flex items-center justify-between border-b border-white/5 last:border-0">
-                                        <span className="text-white text-[17px]">卡片颜色</span>
-                                        <div className="flex items-center gap-2">
-                                            <input type="color" value={cardColor} onChange={(e) => { setCardColor(e.target.value); localStorage.setItem('card_color', e.target.value); }}
-                                                className="w-8 h-8 rounded-full overflow-hidden border-0 p-0 cursor-pointer" />
-                                            <span className="text-gray-400 text-sm font-mono uppercase">{cardColor}</span>
+                                        <div>
+                                            <p className="text-white text-[17px]">动态色模式</p>
+                                            <p className="text-xs text-gray-400 mt-0.5">从天气背景提取主色调</p>
                                         </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" checked={useDynamicColor} onChange={(e) => { setUseDynamicColor(e.target.checked); localStorage.setItem('use_dynamic_color', e.target.checked); }} className="sr-only peer" />
+                                            <div className="w-[51px] h-[31px] bg-[#39393d] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[20px] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-[27px] after:w-[27px] after:shadow-sm after:transition-all peer-checked:bg-[#34c759]"></div>
+                                        </label>
                                     </div>
+                                    {!useDynamicColor && (
+                                        <>
+                                            <div className="p-4 flex items-center justify-between border-b border-white/5 last:border-0">
+                                                <span className="text-white text-[17px]">卡片颜色</span>
+                                                <div className="flex items-center gap-2">
+                                                    <input type="color" value={cardColor} onChange={(e) => { setCardColor(e.target.value); localStorage.setItem('card_color', e.target.value); }}
+                                                        className="w-8 h-8 rounded-full overflow-hidden border-0 p-0 cursor-pointer" />
+                                                    <span className="text-gray-400 text-sm font-mono uppercase">{cardColor}</span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="p-4 flex flex-col gap-2">
                                         <div className="flex justify-between items-center">
                                             <span className="text-white text-[17px]">卡片透明度</span>

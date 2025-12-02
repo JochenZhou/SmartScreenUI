@@ -3,7 +3,7 @@ import { MapPin, Sun, Cloud, CloudRain, CloudSnow, CloudLightning, Wind, Setting
 import { Solar, Lunar } from 'lunar-javascript';
 import { Capacitor } from '@capacitor/core';
 import WeatherStyles from './WeatherStyles';
-import WeatherBackground from './WeatherBackground';
+import WeatherBackground, { getWeatherDominantColor } from './WeatherBackground';
 import SettingsModal from './SettingsModal';
 import FlipClock from './FlipClock';
 import { CONDITION_CN_MAP, QWEATHER_ICON_MAP, normalizeWeatherState } from './weatherUtils';
@@ -43,6 +43,7 @@ const SmartDisplay = () => {
     const [showSeconds, setShowSeconds] = useState(() => localStorage.getItem('show_seconds') !== 'false');
     const [cardColor, setCardColor] = useState(() => localStorage.getItem('card_color') || '#1c1c1e');
     const [cardOpacity, setCardOpacity] = useState(() => parseFloat(localStorage.getItem('card_opacity') || '1'));
+    const [useDynamicColor, setUseDynamicColor] = useState(() => localStorage.getItem('use_dynamic_color') === 'true');
     const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('config_server_url') || '');
     const [useRemoteConfig, setUseRemoteConfig] = useState(() => localStorage.getItem('use_remote_config') === 'true');
     const [deviceIP, setDeviceIP] = useState('');
@@ -58,6 +59,24 @@ const SmartDisplay = () => {
     });
 
     const isLunarReady = true;
+
+    // --- 动态颜色模式 - 从天气背景提取主色调 ---
+    useEffect(() => {
+        if (useDynamicColor && weather.mappedKey) {
+            const dominantColor = getWeatherDominantColor(weather.mappedKey);
+            console.log('🎨 Dynamic color mode:', {
+                enabled: useDynamicColor,
+                weatherKey: weather.mappedKey,
+                extractedColor: dominantColor,
+                weatherState: weather.state
+            });
+            setCardColor(dominantColor);
+            // 同时更新 localStorage，防止被覆盖
+            localStorage.setItem('card_color', dominantColor);
+        } else if (!useDynamicColor) {
+            console.log('🎨 Dynamic color mode disabled, using manual color:', cardColor);
+        }
+    }, [useDynamicColor, weather.mappedKey, weather.state]);
 
     // --- 1. 时间更新 ---
     useEffect(() => {
@@ -96,13 +115,18 @@ const SmartDisplay = () => {
                     setShowSeconds(update.show_seconds);
                     localStorage.setItem('show_seconds', update.show_seconds);
                 }
-                if (update.card_color) {
+                if (update.card_color && !useDynamicColor) {
+                    // 只有在非动态色模式下才接受颜色更新
                     setCardColor(update.card_color);
                     localStorage.setItem('card_color', update.card_color);
                 }
                 if (update.card_opacity !== undefined) {
                     setCardOpacity(update.card_opacity);
                     localStorage.setItem('card_opacity', update.card_opacity);
+                }
+                if (update.use_dynamic_color !== undefined) {
+                    setUseDynamicColor(update.use_dynamic_color);
+                    localStorage.setItem('use_dynamic_color', update.use_dynamic_color);
                 }
             };
             mqttService.onWeatherUpdate = (update) => {
@@ -140,10 +164,11 @@ const SmartDisplay = () => {
                 show_seconds: showSeconds,
                 card_color: cardColor,
                 card_opacity: cardOpacity,
+                use_dynamic_color: useDynamicColor,
                 weather_entity: config.weather_entity
             });
         }
-    }, [mqttConnected, demoMode, demoState, demoFestival, displayMode, showSeconds, cardColor, cardOpacity, config.weather_entity]);
+    }, [mqttConnected, demoMode, demoState, demoFestival, displayMode, showSeconds, cardColor, cardOpacity, useDynamicColor, config.weather_entity]);
 
     // --- 1.5. 获取局域网 IP 地址 ---
     useEffect(() => {
@@ -309,6 +334,7 @@ const SmartDisplay = () => {
         localStorage.setItem('show_seconds', showSeconds);
         localStorage.setItem('card_color', cardColor);
         localStorage.setItem('card_opacity', cardOpacity);
+        localStorage.setItem('use_dynamic_color', useDynamicColor);
         setShowSettings(false);
     };
 
@@ -533,13 +559,16 @@ const SmartDisplay = () => {
                         {displayMode === 'flip_clock' ? (
                             <div className="flex flex-col items-center justify-center h-full w-full animate-in fade-in duration-700">
                                 <FlipClock time={now} showSeconds={showSeconds} cardColor={cardColor} cardOpacity={cardOpacity} />
-                                <div className="mt-12 flex items-center space-x-6 text-2xl text-white font-medium drop-shadow-lg bg-black/20 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/10 shadow-xl">
-                                    {getWeatherIcon(weather.mappedKey)}
-                                    <span className="text-3xl">{getWeatherText(weather.mappedKey)}</span>
-                                    <span className="text-4xl font-light ml-2">{weather.temperature}°</span>
-                                </div>
-                                <div className="mt-6 text-xl text-white/60 tracking-widest font-light uppercase">
-                                    {formatDate(now)} · {lunarData.dayStr}
+                                <div className="mt-12 flex items-center justify-center flex-wrap gap-x-8 gap-y-4 text-xl text-white font-medium drop-shadow-lg bg-black/20 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/10 shadow-xl">
+                                    <div className="flex items-center space-x-4 text-2xl">
+                                        {getWeatherIcon(weather.mappedKey)}
+                                        <span className="text-3xl">{getWeatherText(weather.mappedKey)}</span>
+                                        <span className="text-4xl font-light ml-2">{weather.temperature}°</span>
+                                    </div>
+                                    <div className="h-6 w-px bg-white/20"></div>
+                                    <div className="text-xl text-white/80 tracking-widest font-light uppercase whitespace-nowrap">
+                                        {formatDate(now)} · {lunarData.dayStr}
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -606,6 +635,7 @@ const SmartDisplay = () => {
                         showSeconds={showSeconds} setShowSeconds={setShowSeconds}
                         cardColor={cardColor} setCardColor={setCardColor}
                         cardOpacity={cardOpacity} setCardOpacity={setCardOpacity}
+                        useDynamicColor={useDynamicColor} setUseDynamicColor={setUseDynamicColor}
                         useRemoteConfig={useRemoteConfig} setUseRemoteConfig={setUseRemoteConfig}
                         deviceIP={deviceIP} editConfig={editConfig} setEditConfig={setEditConfig}
                         handleSaveConfig={handleSaveConfig} mqttConnected={mqttConnected}

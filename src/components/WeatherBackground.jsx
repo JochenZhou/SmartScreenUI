@@ -1,4 +1,41 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { extractDominantColor } from '../utils/colorExtractor';
+
+// 导出函数以便其他组件使用
+export const getWeatherGradient = (key) => {
+    switch (true) {
+        case key === 'CLEAR_DAY': return 'bg-gradient-to-br from-blue-900 via-blue-700 to-blue-400';
+        case key === 'CLEAR_NIGHT': return 'bg-gradient-to-br from-slate-900 via-blue-900 to-black';
+        case key.includes('PARTLY'): return 'bg-gradient-to-br from-[#4B79A1] to-[#283E51]';
+        case key === 'CLOUDY': return 'bg-gradient-to-br from-[#232526] to-[#414345]';
+        case key === 'LIGHT_RAIN': return 'bg-gradient-to-b from-[#29323c] to-[#485563]';
+        case key === 'MODERATE_RAIN': return 'bg-gradient-to-b from-[#141E30] to-[#243B55]';
+        case key === 'HEAVY_RAIN': return 'bg-gradient-to-b from-[#0f2027] via-[#203a43] to-[#2c5364]';
+        case key === 'STORM_RAIN' || key.includes('THUNDER'): return 'bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]';
+        case key === 'LIGHT_SNOW': return 'bg-gradient-to-b from-[#607D8B] to-[#90A4AE]';
+        case key === 'MODERATE_SNOW': return 'bg-gradient-to-b from-[#274060] to-[#1B2838]';
+        case key === 'HEAVY_SNOW' || key === 'STORM_SNOW': return 'bg-gradient-to-b from-[#16222A] to-[#3A6073]';
+        case key === 'HAIL': return 'bg-gradient-to-b from-[#1e3c72] to-[#2a5298]';
+        case key === 'SLEET': return 'bg-gradient-to-b from-[#2c3e50] to-[#7f8c8d]';
+        case key === 'LIGHT_FOG' || key === 'LIGHT_HAZE': return 'bg-gradient-to-t from-[#5a626e] to-[#8E9EAB]';
+        case key === 'MODERATE_FOG' || key === 'MODERATE_HAZE' || key === 'FOG' || key === 'HAZE': return 'bg-gradient-to-t from-[#373B44] to-[#8E9EAB]';
+        case key === 'HEAVY_FOG' || key === 'HEAVY_HAZE': return 'bg-gradient-to-t from-[#242424] to-[#5a626e]';
+        case key === 'DUST' || key === 'SAND': return 'bg-gradient-to-br from-[#3E5151] to-[#DECBA4]';
+        default: return 'bg-gradient-to-br from-blue-900 to-slate-200';
+    }
+};
+
+// 导出函数获取天气主色调
+export const getWeatherDominantColor = (weatherKey) => {
+    const gradient = getWeatherGradient(weatherKey);
+    const dominantColor = extractDominantColor(gradient);
+    console.log('🌈 Color extraction:', {
+        weatherKey,
+        gradient,
+        dominantColor
+    });
+    return dominantColor;
+};
 
 const WeatherBackground = ({ weatherKey, festival }) => {
     const [displayFestival, setDisplayFestival] = useState(festival);
@@ -15,28 +52,8 @@ const WeatherBackground = ({ weatherKey, festival }) => {
             return () => clearTimeout(timer);
         }
     }, [festival]);
-    const getGradient = (key) => {
-        switch (true) {
-            case key === 'CLEAR_DAY': return 'bg-gradient-to-br from-blue-900 via-blue-700 to-blue-400';
-            case key === 'CLEAR_NIGHT': return 'bg-gradient-to-br from-slate-900 via-blue-900 to-black';
-            case key.includes('PARTLY'): return 'bg-gradient-to-br from-[#4B79A1] to-[#283E51]';
-            case key === 'CLOUDY': return 'bg-gradient-to-br from-[#232526] to-[#414345]';
-            case key === 'LIGHT_RAIN': return 'bg-gradient-to-b from-[#29323c] to-[#485563]';
-            case key === 'MODERATE_RAIN': return 'bg-gradient-to-b from-[#141E30] to-[#243B55]';
-            case key === 'HEAVY_RAIN': return 'bg-gradient-to-b from-[#0f2027] via-[#203a43] to-[#2c5364]';
-            case key === 'STORM_RAIN' || key.includes('THUNDER'): return 'bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]';
-            case key === 'LIGHT_SNOW': return 'bg-gradient-to-b from-[#607D8B] to-[#90A4AE]';
-            case key === 'MODERATE_SNOW': return 'bg-gradient-to-b from-[#274060] to-[#1B2838]';
-            case key === 'HEAVY_SNOW' || key === 'STORM_SNOW': return 'bg-gradient-to-b from-[#16222A] to-[#3A6073]';
-            case key === 'HAIL': return 'bg-gradient-to-b from-[#1e3c72] to-[#2a5298]';
-            case key === 'SLEET': return 'bg-gradient-to-b from-[#2c3e50] to-[#7f8c8d]';
-            case key === 'LIGHT_FOG' || key === 'LIGHT_HAZE': return 'bg-gradient-to-t from-[#5a626e] to-[#8E9EAB]';
-            case key === 'MODERATE_FOG' || key === 'MODERATE_HAZE' || key === 'FOG' || key === 'HAZE': return 'bg-gradient-to-t from-[#373B44] to-[#8E9EAB]';
-            case key === 'HEAVY_FOG' || key === 'HEAVY_HAZE': return 'bg-gradient-to-t from-[#242424] to-[#5a626e]';
-            case key === 'DUST' || key === 'SAND': return 'bg-gradient-to-br from-[#3E5151] to-[#DECBA4]';
-            default: return 'bg-gradient-to-br from-blue-900 to-slate-200';
-        }
-    };
+
+    const getGradient = getWeatherGradient;
 
     const renderCelestialBody = (key) => {
         if (key === 'CLEAR_DAY' || key === 'PARTLY_CLOUDY_DAY') {
