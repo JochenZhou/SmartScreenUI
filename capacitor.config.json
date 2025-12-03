@@ -1,6 +1,6 @@
 {
   "appId": "com.smartscreen.weather",
-  "appName": "Smart Weather Display",
+  "appName": "HA天气屏",
   "webDir": "dist",
   "server": {
     "allowNavigation": ["*"],
