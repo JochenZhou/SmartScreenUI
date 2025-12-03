@@ -1,99 +1,66 @@
 import React, { useEffect, useState } from 'react';
 
-const FlipCard = ({ digit, cardColor, cardOpacity }) => {
-    const [prevDigit, setPrevDigit] = useState(digit);
+// 整体翻页卡片组件 - 显示两位数字作为一个单位
+const FlipUnit = ({ value, cardColor, cardOpacity }) => {
+    const [prevValue, setPrevValue] = useState(value);
     const [isFlipping, setIsFlipping] = useState(false);
 
     useEffect(() => {
-        if (digit !== prevDigit) {
+        if (value !== prevValue) {
             setIsFlipping(true);
 
             const timer = setTimeout(() => {
-                setPrevDigit(digit);
+                setPrevValue(value);
                 setIsFlipping(false);
-            }, 600);
+            }, 700);
 
             return () => clearTimeout(timer);
         }
-    }, [digit, prevDigit]);
+    }, [value, prevValue]);
 
-    // Convert hex color to rgba for opacity support if needed, 
-    // but here we use opacity style on the container or background directly.
-    // Ideally cardColor is a hex string like "#1c1c1e".
-
-    const cardStyle = {
-        backgroundColor: cardColor,
-        opacity: cardOpacity,
+    const hexToRgb = (hex) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 28, g: 28, b: 30 };
     };
 
-    // We apply the background color to the card layers. 
-    // The opacity is tricky because we don't want to make the text transparent, just the background.
-    // So we use a helper to inject opacity into the background color if it's hex.
-    const getBgStyle = () => {
-        // Simple hex to rgba conversion or just use the color and apply opacity to the div
-        // If we apply opacity to the div, text also becomes transparent.
-        // Let's assume the user wants the whole card (bg) transparent but text opaque?
-        // Usually "background opacity" implies rgba. 
-        // For simplicity, let's apply opacity to the background element if possible, 
-        // or just use the opacity prop on the style if the user wants the whole card semi-transparent.
-        // Given the request "modify number background color and transparency", likely means RGBA background.
-
-        // Let's use a style object that applies the color. 
-        // If we want independent background opacity, we'd need to convert hex to rgba.
-        // For now, let's apply opacity to the card container's background color using a utility or inline style.
-
-        // Actually, the easiest way to handle "background transparency" without affecting text 
-        // is to use `rgba` or `hex8`. 
-        // But the input is likely a color picker (hex) and a slider (0-1).
-        // Let's construct the color string.
-
-        // Helper to convert hex to rgb
-        const hexToRgb = (hex) => {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : { r: 28, g: 28, b: 30 }; // Default #1c1c1e
-        };
-
-        const rgb = hexToRgb(cardColor);
-        return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${cardOpacity})`;
-    };
-
-    const bgStyle = { backgroundColor: getBgStyle() };
+    const rgb = hexToRgb(cardColor);
+    const bgStyle = { backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${cardOpacity})` };
 
     return (
-        <div className="flip-card-container relative w-[140px] h-[220px]" style={{ perspective: '2000px' }}>
-            <div className="relative w-full h-full rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden" style={bgStyle}>
+        <div className="flip-unit-container relative w-[300px] h-[260px]" style={{ perspective: '2500px' }}>
+            <div className="relative w-full h-full rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10" style={{ backgroundColor: 'transparent' }}>
 
-                {/* Static Upper Half - shows current digit top */}
-                <div className="absolute top-0 left-0 w-full h-[110px] overflow-hidden z-20" style={bgStyle}>
-                    <div className="absolute w-full h-[220px] top-0 flex items-center justify-center text-[160px] font-mono font-bold text-[#e5e5e5] leading-[220px]">
-                        {digit}
+                {/* Static Upper Half - shows current value top */}
+                <div className="absolute top-0 left-0 w-full h-[128px] overflow-hidden z-20 rounded-t-2xl" style={bgStyle}>
+                    <div className="absolute w-full h-[260px] top-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider">
+                        {value}
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-black/40 to-transparent"></div>
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
                 </div>
 
-                {/* Static Lower Half - shows previous digit bottom */}
-                <div className="absolute bottom-0 left-0 w-full h-[110px] overflow-hidden z-10" style={{ ...bgStyle, filter: 'brightness(0.85)' }}>
-                    <div className="absolute w-full h-[220px] bottom-0 flex items-center justify-center text-[160px] font-mono font-bold text-[#e5e5e5] leading-[220px]">
-                        {prevDigit}
+                {/* 中间透明间隙 */}
+                <div className="absolute top-[128px] left-0 w-full h-[4px] z-15 bg-transparent"></div>
+
+                {/* Static Lower Half - shows previous value bottom */}
+                <div className="absolute bottom-0 left-0 w-full h-[128px] overflow-hidden z-10 rounded-b-2xl" style={{ ...bgStyle, filter: 'brightness(0.85)' }}>
+                    <div className="absolute w-full h-[260px] bottom-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider">
+                        {prevValue}
                     </div>
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-black/40 to-transparent"></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
                 </div>
 
                 {/* Flipping Upper Half */}
                 {isFlipping && (
-                    <div className="flip-upper absolute top-0 left-0 w-full h-[110px] overflow-hidden origin-bottom z-30 rounded-t-2xl"
+                    <div className="flip-upper absolute top-0 left-0 w-full h-[128px] overflow-hidden origin-bottom z-30 rounded-t-2xl"
                         style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden', ...bgStyle }}>
                         <div className="absolute inset-0" style={bgStyle}></div>
-                        <div className="absolute w-full h-[220px] top-0 flex items-center justify-center text-[160px] font-mono font-bold text-[#e5e5e5] leading-[220px] z-10">
-                            {prevDigit}
+                        <div className="absolute w-full h-[260px] top-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider z-10">
+                            {prevValue}
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-black/40 to-transparent z-20"></div>
                         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-20"></div>
                         <div className="flip-shadow absolute inset-0 bg-black pointer-events-none z-30"></div>
                     </div>
@@ -101,13 +68,12 @@ const FlipCard = ({ digit, cardColor, cardOpacity }) => {
 
                 {/* Flipping Lower Half */}
                 {isFlipping && (
-                    <div className="flip-lower absolute bottom-0 left-0 w-full h-[110px] overflow-hidden origin-top z-40 rounded-b-2xl"
-                        style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden', transform: 'rotateX(180deg)' }}>
+                    <div className="flip-lower absolute bottom-0 left-0 w-full h-[128px] overflow-hidden origin-top z-40 rounded-b-2xl"
+                        style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' }}>
                         <div className="absolute inset-0" style={{ ...bgStyle, filter: 'brightness(0.85)' }}></div>
-                        <div className="absolute w-full h-[220px] bottom-0 flex items-center justify-center text-[160px] font-mono font-bold text-[#e5e5e5] leading-[220px] z-10">
-                            {digit}
+                        <div className="absolute w-full h-[260px] bottom-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider z-10">
+                            {value}
                         </div>
-                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-black/40 to-transparent z-20"></div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none z-20"></div>
                         <div className="flip-shadow absolute inset-0 bg-black pointer-events-none z-30"></div>
                     </div>
@@ -138,16 +104,18 @@ const FlipClock = ({ time, showSeconds = true, cardColor = '#1c1c1e', cardOpacit
     return (
         <>
             <style>{`
-                .flip-card-container {
-                    perspective: 2000px;
+                .flip-unit-container {
+                    perspective: 2500px;
                 }
 
                 .flip-upper {
-                    animation: flipDown 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    animation: flipDown 0.7s cubic-bezier(0.4, 0.0, 0.6, 1.0) forwards;
+                    transform-origin: center bottom;
                 }
 
                 .flip-lower {
-                    animation: flipUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+                    animation: flipUp 0.7s cubic-bezier(0.4, 0.0, 0.6, 1.0) forwards;
+                    transform-origin: center top;
                 }
 
                 @keyframes flipDown {
@@ -169,11 +137,11 @@ const FlipClock = ({ time, showSeconds = true, cardColor = '#1c1c1e', cardOpacit
                 }
 
                 .flip-upper .flip-shadow {
-                    animation: shadowTop 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    animation: shadowTop 0.7s cubic-bezier(0.4, 0.0, 0.6, 1.0) forwards;
                 }
 
                 .flip-lower .flip-shadow {
-                    animation: shadowBottom 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    animation: shadowBottom 0.7s cubic-bezier(0.4, 0.0, 0.6, 1.0) forwards;
                 }
 
                 @keyframes shadowTop {
@@ -181,7 +149,7 @@ const FlipClock = ({ time, showSeconds = true, cardColor = '#1c1c1e', cardOpacit
                         opacity: 0;
                     }
                     50% {
-                        opacity: 0.3;
+                        opacity: 0.6;
                     }
                     100% {
                         opacity: 0;
@@ -193,32 +161,23 @@ const FlipClock = ({ time, showSeconds = true, cardColor = '#1c1c1e', cardOpacit
                         opacity: 0;
                     }
                     50% {
-                        opacity: 0.3;
+                        opacity: 0.6;
                     }
                     100% {
                         opacity: 0;
                     }
                 }
             `}</style>
-            <div className={`flex items-center justify-center gap-4 sm:gap-6 origin-center transition-all duration-500 ${showSeconds ? 'scale-75 sm:scale-100' : 'scale-100 sm:scale-125'}`}>
+            <div className={`flex items-center justify-center gap-8 sm:gap-10 origin-center transition-all duration-500 ${showSeconds ? 'scale-75 sm:scale-90' : 'scale-100 sm:scale-125'}`}>
                 {/* Hours */}
-                <div className="flex gap-1 sm:gap-2">
-                    <FlipCard digit={hours[0]} cardColor={cardColor} cardOpacity={cardOpacity} />
-                    <FlipCard digit={hours[1]} cardColor={cardColor} cardOpacity={cardOpacity} />
-                </div>
+                <FlipUnit value={hours} cardColor={cardColor} cardOpacity={cardOpacity} />
 
                 {/* Minutes */}
-                <div className="flex gap-1 sm:gap-2">
-                    <FlipCard digit={minutes[0]} cardColor={cardColor} cardOpacity={cardOpacity} />
-                    <FlipCard digit={minutes[1]} cardColor={cardColor} cardOpacity={cardOpacity} />
-                </div>
+                <FlipUnit value={minutes} cardColor={cardColor} cardOpacity={cardOpacity} />
 
                 {/* Seconds */}
                 {showSeconds && (
-                    <div className="flex gap-1 sm:gap-2">
-                        <FlipCard digit={seconds[0]} cardColor={cardColor} cardOpacity={cardOpacity} />
-                        <FlipCard digit={seconds[1]} cardColor={cardColor} cardOpacity={cardOpacity} />
-                    </div>
+                    <FlipUnit value={seconds} cardColor={cardColor} cardOpacity={cardOpacity} />
                 )}
             </div>
         </>

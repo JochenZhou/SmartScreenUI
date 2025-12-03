@@ -38,30 +38,6 @@ const WeatherStyles = () => (
       0%, 100% { opacity: 0.2; transform: scale(0.8); }
       50% { opacity: 0.9; transform: scale(1.2); }
     }
-    @keyframes meteor {
-      0% {
-        transform: translateX(0) translateY(0) rotate(-45deg);
-        opacity: 0;
-      }
-      5% {
-        opacity: 1;
-      }
-      95% {
-        opacity: 0.8;
-      }
-      100% {
-        transform: translateX(min(80vw, 600px)) translateY(min(80vh, 600px)) rotate(-45deg);
-        opacity: 0;
-      }
-    }
-    @keyframes meteor-glow {
-      0%, 100% {
-        filter: drop-shadow(0 0 3px rgba(255,255,255,0.8)) drop-shadow(0 0 6px rgba(147,197,253,0.6));
-      }
-      50% {
-        filter: drop-shadow(0 0 6px rgba(255,255,255,1)) drop-shadow(0 0 12px rgba(147,197,253,0.8));
-      }
-    }
     @keyframes lightning-flash-screen {
       0%, 95%, 100% { opacity: 0; }
       96% { opacity: 0.3; }
