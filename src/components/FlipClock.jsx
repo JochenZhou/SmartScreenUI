@@ -34,10 +34,10 @@ const FlipUnit = ({ value, cardColor, cardOpacity }) => {
         <div className="flip-unit-container relative w-[300px] h-[260px]" style={{ perspective: '2500px' }}>
             <div className="relative w-full h-full rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10" style={{ backgroundColor: 'transparent' }}>
 
-                {/* Static Upper Half - shows current value top (only when not flipping) */}
+                {/* Static Upper Half - shows current value top */}
                 <div className="absolute top-0 left-0 w-full h-[128px] overflow-hidden z-20 rounded-t-2xl" style={bgStyle}>
                     <div className="absolute w-full h-[260px] top-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider">
-                        {isFlipping ? prevValue : value}
+                        {value}
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
                 </div>
@@ -56,13 +56,17 @@ const FlipUnit = ({ value, cardColor, cardOpacity }) => {
                 {/* Flipping Upper Half */}
                 {isFlipping && (
                     <div className="flip-upper absolute top-0 left-0 w-full h-[128px] overflow-hidden origin-bottom z-30 rounded-t-2xl"
-                        style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden', ...bgStyle }}>
+                        style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' }}>
+                        {/* 完全不透明的背景层 - 确保完全遮挡下层 */}
                         <div className="absolute inset-0" style={bgStyle}></div>
-                        <div className="absolute w-full h-[260px] top-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider z-10">
+                        {/* 数字内容 */}
+                        <div className="absolute w-full h-[260px] top-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider">
                             {prevValue}
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-20"></div>
-                        <div className="flip-shadow absolute inset-0 bg-black pointer-events-none z-30"></div>
+                        {/* 渐变效果 */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+                        {/* 阴影动画 */}
+                        <div className="flip-shadow absolute inset-0 bg-black pointer-events-none"></div>
                     </div>
                 )}
 
