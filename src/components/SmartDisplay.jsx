@@ -49,6 +49,7 @@ const SmartDisplay = () => {
     const [deviceIP, setDeviceIP] = useState('');
     const [serverStatus, setServerStatus] = useState('');
     const [mqttConnected, setMqttConnected] = useState(false);
+    const [lastSyncTrigger, setLastSyncTrigger] = useState(0);
 
     const [weather, setWeather] = useState({
         state: "sunny",
@@ -347,128 +348,53 @@ const SmartDisplay = () => {
         // 初始加载远程配置
         loadRemoteConfig(true);
 
+        // 检查同步触发器
+        const checkSyncTrigger = async () => {
+            try {
+                if (!serverUrl && !deviceIP) return;
+                const apiUrl = serverUrl ? `${serverUrl.trim().replace(/\/$/, '')}/api/sync-trigger` : `http://${deviceIP}:3001/api/sync-trigger`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const now = Date.now();
+                    const configAge = now - data.timestamp;
+                    
+                    // 如果配置超过3秒，认为过时，不同步
+                    if (configAge > 3000) {
+                        return;
+                    }
+                    
+                    if (data.timestamp > lastSyncTrigger) {
+                        console.log('🔄 检测到远程配置更新，自动同步...');
+                        setLastSyncTrigger(data.timestamp);
+                        await loadRemoteConfig(true);
+                    }
+                }
+            } catch (error) {
+                console.error('检查同步触发器失败:', error);
+            }
+        };
+
+        // 每3秒检查一次是否需要同步
+        const syncCheckTimer = setInterval(checkSyncTrigger, 3000);
+
         // 设置较长间隔的连接检查（30秒），但不自动同步配置
         const interval = setInterval(() => loadRemoteConfig(false), 30000);
 
         return () => {
             clearInterval(interval);
-        };
-    }, [useRemoteConfig, serverUrl, deviceIP]);
-
-    // --- WebSocket 实时更新处理 ---
-    useEffect(() => {
-        if (!useRemoteConfig) return;
-
-        let ws = null;
-
-        // 建立 WebSocket 连接接收实时更新
-        const connectWebSocket = () => {
-            try {
-                const wsUrl = serverUrl ?
-                    `ws://${serverUrl.trim().replace(/^https?:\/\//, '').replace(/\/$/, '')}:3002` :
-                    `ws://${deviceIP}:3002`;
-
-                ws = new WebSocket(wsUrl);
-
-                ws.onopen = () => {
-                    console.log('🔗 Connected to config updates WebSocket');
-                    console.log('🌐 WebSocket URL:', wsUrl);
-                };
-
-                ws.onclose = (event) => {
-                    console.log('❌ WebSocket connection closed:', event.code, event.reason);
-                    console.log('🔄 Attempting to reconnect in 3 seconds...');
-                    setTimeout(connectWebSocket, 3000);
-                };
-
-                ws.onerror = (error) => {
-                    console.error('🚫 WebSocket error:', error);
-                };
-
-                ws.onmessage = (event) => {
-                    try {
-                        const message = JSON.parse(event.data);
-                        console.log('📨 Raw WebSocket message received:', event.data);
-                        console.log('📨 Parsed message:', message);
-                        if (message.type === 'config_update') {
-                            console.log('📨 Received config update:', message.data);
-                            console.log('📨 Current useRemoteConfig:', useRemoteConfig);
-                            if (!useRemoteConfig) {
-                                console.log('🚫 Remote config disabled, ignoring update');
-                                return;
-                            }
-                            const remoteConfig = message.data;
-
-                            // 应用远程配置更新
-                            setConfig(remoteConfig);
-                            setEditConfig(remoteConfig);
-                            if (remoteConfig.demo_mode !== undefined) {
-                                setDemoMode(remoteConfig.demo_mode);
-                                localStorage.setItem('demo_mode', remoteConfig.demo_mode);
-                            }
-                            if (remoteConfig.demo_state) {
-                                setDemoState(remoteConfig.demo_state);
-                                localStorage.setItem('demo_state', remoteConfig.demo_state);
-                            }
-                            if (remoteConfig.demo_festival !== undefined) {
-                                setDemoFestival(remoteConfig.demo_festival);
-                                localStorage.setItem('demo_festival', remoteConfig.demo_festival);
-                            }
-                            if (remoteConfig.display_mode) {
-                                setDisplayMode(remoteConfig.display_mode);
-                                localStorage.setItem('display_mode', remoteConfig.display_mode);
-                            }
-                            if (remoteConfig.show_seconds !== undefined) {
-                                setShowSeconds(remoteConfig.show_seconds);
-                                localStorage.setItem('show_seconds', remoteConfig.show_seconds);
-                            }
-                            if (remoteConfig.card_color) {
-                                setCardColor(remoteConfig.card_color);
-                                localStorage.setItem('card_color', remoteConfig.card_color);
-                            }
-                            if (remoteConfig.card_opacity !== undefined) {
-                                setCardOpacity(remoteConfig.card_opacity);
-                                localStorage.setItem('card_opacity', remoteConfig.card_opacity);
-                            }
-                            if (remoteConfig.use_dynamic_color !== undefined) {
-                                setUseDynamicColor(remoteConfig.use_dynamic_color);
-                                localStorage.setItem('use_dynamic_color', remoteConfig.use_dynamic_color);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Failed to parse WebSocket message:', error);
-                    }
-                };
-
-                ws.onclose = () => {
-                    console.log('❌ WebSocket connection closed, attempting to reconnect...');
-                    setTimeout(connectWebSocket, 3000); // 3秒后重连
-                };
-
-                ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                };
-            } catch (error) {
-                console.error('Failed to connect to WebSocket:', error);
-                // 如果 WebSocket 连接失败，5秒后重试
-                setTimeout(connectWebSocket, 5000);
-            }
-        };
-
-        // 启动 WebSocket 连接
-        if (serverUrl || deviceIP) {
-            connectWebSocket();
-        }
-
-        return () => {
-            if (ws) {
-                ws.close();
-            }
+            clearInterval(syncCheckTimer);
         };
     }, [useRemoteConfig, serverUrl, deviceIP]);
 
     // --- 事件处理 ---
-    const handleSaveConfig = () => {
+    const handleSaveConfig = async () => {
         localStorage.setItem('smart_screen_config', JSON.stringify(editConfig));
         setConfig(editConfig);
         localStorage.setItem('demo_mode', demoMode);
@@ -477,6 +403,35 @@ const SmartDisplay = () => {
         localStorage.setItem('card_color', cardColor);
         localStorage.setItem('card_opacity', cardOpacity);
         localStorage.setItem('use_dynamic_color', useDynamicColor);
+        
+        // 如果启用了远程配置，保存到服务器并触发同步
+        if (useRemoteConfig && (serverUrl || deviceIP)) {
+            try {
+                const apiUrl = serverUrl ? `${serverUrl.trim().replace(/\/$/, '')}/api/config` : `http://${deviceIP}:3001/api/config`;
+                const configToSave = {
+                    ...editConfig,
+                    demo_mode: demoMode,
+                    demo_state: demoState,
+                    demo_festival: demoFestival,
+                    display_mode: displayMode,
+                    show_seconds: showSeconds,
+                    card_color: cardColor,
+                    card_opacity: cardOpacity,
+                    use_dynamic_color: useDynamicColor
+                };
+                
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    body: JSON.stringify(configToSave)
+                });
+                console.log('✅ 配置已保存到服务器');
+            } catch (error) {
+                console.error('保存到服务器失败:', error);
+            }
+        }
+        
         setShowSettings(false);
     };
 
