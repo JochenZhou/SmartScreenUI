@@ -3,7 +3,16 @@
   "ha_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2MDg4OTYwZTdhNDI0OTAzYWRlNTVlMmZlMDFlOTM0MCIsImlhdCI6MTc2NDExOTYwMywiZXhwIjoyMDc5NDc5NjAzfQ.0uJopptOy4Pr4KgaeKPFUcGo2CPMAKg5iqPNTR8lxd4",
   "weather_entity": "weather.wo_de_jia_2",
   "location_name": "康桥公馆",
+  "mqtt_host": "",
+  "mqtt_port": "1884",
+  "mqtt_username": "",
+  "mqtt_password": "",
   "demo_mode": true,
   "demo_state": "HEAVY_SNOW",
-  "demo_festival": "平安夜"
+  "demo_festival": "万圣节",
+  "display_mode": "flip_clock",
+  "show_seconds": true,
+  "card_color": "#1c1c1e",
+  "card_opacity": 1,
+  "use_dynamic_color": false
 }
