@@ -290,12 +290,16 @@ const SmartDisplay = () => {
 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json; charset=utf-8',
+                        'Accept': 'application/json; charset=utf-8'
+                    },
                     mode: 'cors'
                 });
 
                 if (response.ok) {
-                    const remoteConfig = await response.json();
+                    const text = await response.text();
+                    const remoteConfig = JSON.parse(text);
 
                     // 只有在初始加载时才自动应用远程配置
                     // 后续的同步只检查是否有更新，但不自动覆盖本地修改
@@ -369,7 +373,10 @@ const SmartDisplay = () => {
                 
                 const response = await fetch(apiUrl, {
                     method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json; charset=utf-8',
+                        'Accept': 'application/json; charset=utf-8'
+                    },
                     mode: 'cors'
                 });
                 
@@ -437,7 +444,10 @@ const SmartDisplay = () => {
             
             fetch(apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Accept': 'application/json; charset=utf-8'
+                },
                 mode: 'cors',
                 body: JSON.stringify(configToSave)
             }).then(() => {
@@ -484,12 +494,16 @@ const SmartDisplay = () => {
 
             const response = await fetch(apiUrl, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Accept': 'application/json; charset=utf-8'
+                },
                 mode: 'cors'
             });
 
             if (response.ok) {
-                const remoteConfig = await response.json();
+                const text = await response.text();
+                const remoteConfig = JSON.parse(text);
 
                 // 保存主配置到 localStorage
                 const mainConfig = {

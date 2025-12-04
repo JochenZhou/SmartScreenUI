@@ -408,7 +408,11 @@
 
         async function loadConfig() {
             try {
-                const response = await fetch('/api/config');
+                const response = await fetch('/api/config', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-cache'
+                });
                 const config = await response.json();
                 document.getElementById('ha_url').value = config.ha_url || '';
                 document.getElementById('ha_token').value = config.ha_token || '';
@@ -471,7 +475,7 @@
             }
         }
 
-        async function saveConfig() {
+        function saveConfig() {
             const config = {
                 ha_url: document.getElementById('ha_url').value,
                 ha_token: document.getElementById('ha_token').value,
@@ -491,16 +495,17 @@
                 use_dynamic_color: useDynamicColor
             };
 
-            try {
-                await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(config)
-                });
-                showStatus('✅ 配置已保存', 'success');
-            } catch (error) {
+            // 立即显示成功提示
+            showStatus('✅ 配置已保存', 'success');
+
+            // 后台异步保存
+            fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: JSON.stringify(config)
+            }).catch(error => {
                 showStatus('❌ 保存失败', 'error');
-            }
+            });
         }
 
         function quickSet(state) {
