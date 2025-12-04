@@ -285,11 +285,21 @@ const SmartDisplay = () => {
 
         const loadRemoteConfig = async (isInitial = false) => {
             try {
-                if (!serverUrl && !deviceIP) {
+                // 在 Capacitor/Android APP 中使用 localhost，在浏览器中使用 deviceIP
+                let apiUrl;
+                if (Capacitor.isNativePlatform()) {
+                    // Android APP 环境：连接本地服务器
+                    apiUrl = 'http://localhost:3001/api/config';
+                } else if (serverUrl) {
+                    // 浏览器环境且设置了服务器地址
+                    apiUrl = `${serverUrl.trim().replace(/\/$/, '')}/api/config`;
+                } else if (deviceIP) {
+                    // 浏览器环境且有设备IP
+                    apiUrl = `http://${deviceIP}:3001/api/config`;
+                } else {
                     console.log('⚠️ 跳过远程配置加载：没有配置服务器地址');
                     return;
                 }
-                const apiUrl = serverUrl ? `${serverUrl.trim().replace(/\/$/, '')}/api/config` : `http://${deviceIP}:3001/api/config`;
 
                 console.log(`📥 ${isInitial ? '同步' : '检查'}远程配置:`, apiUrl);
                 const response = await fetch(apiUrl, {
@@ -376,11 +386,21 @@ const SmartDisplay = () => {
         // 检查同步触发器
         const checkSyncTrigger = async () => {
             try {
-                if (!serverUrl && !deviceIP) {
+                // 在 Capacitor/Android APP 中使用 localhost，在浏览器中使用 deviceIP
+                let apiUrl;
+                if (Capacitor.isNativePlatform()) {
+                    // Android APP 环境：连接本地服务器
+                    apiUrl = 'http://localhost:3001/api/sync-trigger';
+                } else if (serverUrl) {
+                    // 浏览器环境且设置了服务器地址
+                    apiUrl = `${serverUrl.trim().replace(/\/$/, '')}/api/sync-trigger`;
+                } else if (deviceIP) {
+                    // 浏览器环境且有设备IP
+                    apiUrl = `http://${deviceIP}:3001/api/sync-trigger`;
+                } else {
                     console.log('⚠️ 跳过同步检查：没有配置服务器地址');
                     return;
                 }
-                const apiUrl = serverUrl ? `${serverUrl.trim().replace(/\/$/, '')}/api/sync-trigger` : `http://${deviceIP}:3001/api/sync-trigger`;
 
                 console.log('🔍 检查同步触发器:', apiUrl);
                 const response = await fetch(apiUrl, {
@@ -451,8 +471,22 @@ const SmartDisplay = () => {
         setShowSettings(false);
         
         // 后台异步保存到服务器
-        if (useRemoteConfig && (serverUrl || deviceIP)) {
-            const apiUrl = serverUrl ? `${serverUrl.trim().replace(/\/$/, '')}/api/config` : `http://${deviceIP}:3001/api/config`;
+        if (useRemoteConfig) {
+            let apiUrl;
+            if (Capacitor.isNativePlatform()) {
+                // Android APP 环境：连接本地服务器
+                apiUrl = 'http://localhost:3001/api/config';
+            } else if (serverUrl) {
+                // 浏览器环境且设置了服务器地址
+                apiUrl = `${serverUrl.trim().replace(/\/$/, '')}/api/config`;
+            } else if (deviceIP) {
+                // 浏览器环境且有设备IP
+                apiUrl = `http://${deviceIP}:3001/api/config`;
+            } else {
+                console.log('⚠️ 无法保存到服务器：没有配置服务器地址');
+                return;
+            }
+
             const configToSave = {
                 ...editConfig,
                 demo_mode: demoMode,
@@ -508,16 +542,25 @@ const SmartDisplay = () => {
         if (!useRemoteConfig) return;
 
         try {
-            if (!serverUrl && !deviceIP) {
+            // 在 Capacitor/Android APP 中使用 localhost，在浏览器中使用 deviceIP
+            let apiUrl;
+            if (Capacitor.isNativePlatform()) {
+                // Android APP 环境：连接本地服务器
+                apiUrl = 'http://localhost:3001/api/config';
+            } else if (serverUrl) {
+                // 浏览器环境且设置了服务器地址
+                apiUrl = `${serverUrl.trim().replace(/\/$/, '')}/api/config`;
+            } else if (deviceIP) {
+                // 浏览器环境且有设备IP
+                apiUrl = `http://${deviceIP}:3001/api/config`;
+            } else {
                 console.log('No valid remote server address');
                 return;
             }
 
-            const apiUrl = serverUrl ? `${serverUrl.trim().replace(/\/$/, '')}/api/config` : `http://${deviceIP}:3001/api/config`;
-
             const response = await fetch(apiUrl, {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json; charset=utf-8',
                     'Accept': 'application/json; charset=utf-8'
                 },
