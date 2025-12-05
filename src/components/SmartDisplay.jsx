@@ -489,11 +489,7 @@ const SmartDisplay = () => {
         // 每3秒检查一次是否需要同步
         const syncCheckTimer = setInterval(checkSyncTrigger, 3000);
 
-        // 设置较长间隔的连接检查（30秒），但不自动同步配置
-        const interval = setInterval(() => loadRemoteConfig(false), 30000);
-
         return () => {
-            clearInterval(interval);
             clearInterval(syncCheckTimer);
         };
     }, [useRemoteConfig, serverUrl, deviceIP]);
