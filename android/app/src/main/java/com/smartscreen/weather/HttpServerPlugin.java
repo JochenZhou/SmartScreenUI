@@ -115,6 +115,8 @@ public class HttpServerPlugin extends Plugin {
                 response = serveAsset("public/config.html", "text/html");
             } else if (uri.equals("/config.html")) {
                 response = serveAsset("public/config.html", "text/html");
+            } else if (uri.equals("/favicon.ico")) {
+                response = serveFavicon();
             } else if (uri.startsWith("/assets/")) {
                 String assetPath = "public" + uri;
                 String mimeType = getMimeType(uri);
@@ -157,6 +159,10 @@ public class HttpServerPlugin extends Plugin {
                 json.put("card_color", prefs.getString("card_color", "#1e293b"));
                 json.put("card_opacity", prefs.getFloat("card_opacity", 1.0f));
                 json.put("use_dynamic_color", prefs.getBoolean("use_dynamic_color", false));
+                
+                // 开关设置
+                json.put("enable_mqtt", prefs.getBoolean("enable_mqtt", true));
+                json.put("enable_api", prefs.getBoolean("enable_api", true));
             } catch (Exception e) {
                 Log.e(TAG, "Error creating JSON", e);
             }
@@ -210,6 +216,10 @@ public class HttpServerPlugin extends Plugin {
                     editor.putFloat("card_opacity", (float) json.getDouble("card_opacity"));
                 }
                 if (json.has("use_dynamic_color")) editor.putBoolean("use_dynamic_color", json.getBoolean("use_dynamic_color"));
+                
+                // 开关设置
+                if (json.has("enable_mqtt")) editor.putBoolean("enable_mqtt", json.getBoolean("enable_mqtt"));
+                if (json.has("enable_api")) editor.putBoolean("enable_api", json.getBoolean("enable_api"));
 
                 editor.apply();
 
@@ -240,6 +250,16 @@ public class HttpServerPlugin extends Plugin {
             }
         }
 
+        private Response serveFavicon() {
+            // 生成简单的 SVG favicon（天气图标）
+            String svg = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                "<svg width=\"32\" height=\"32\" viewBox=\"0 0 32 32\" xmlns=\"http://www.w3.org/2000/svg\">" +
+                "<circle cx=\"16\" cy=\"16\" r=\"6\" fill=\"#FDB813\"/>" +
+                "<path d=\"M16 4v4M16 24v4M28 16h-4M8 16H4M24.5 7.5l-2.8 2.8M10.3 21.7l-2.8 2.8M24.5 24.5l-2.8-2.8M10.3 10.3l-2.8-2.8\" stroke=\"#FDB813\" stroke-width=\"2\" stroke-linecap=\"round\"/>" +
+                "</svg>";
+            return newFixedLengthResponse(Response.Status.OK, "image/svg+xml", svg);
+        }
+
         private String getMimeType(String uri) {
             if (uri.endsWith(".html")) return "text/html";
             if (uri.endsWith(".js")) return "application/javascript";
@@ -248,6 +268,7 @@ public class HttpServerPlugin extends Plugin {
             if (uri.endsWith(".png")) return "image/png";
             if (uri.endsWith(".jpg") || uri.endsWith(".jpeg")) return "image/jpeg";
             if (uri.endsWith(".svg")) return "image/svg+xml";
+            if (uri.endsWith(".ico")) return "image/x-icon";
             return "application/octet-stream";
         }
     }

@@ -278,6 +278,12 @@
         <div class="section-title">MQTT 连接</div>
         <div class="inset-group">
             <div class="list-item">
+                <label>启用 MQTT</label>
+                <div class="toggle-switch" id="enable_mqtt_toggle" onclick="toggleEnableMqtt()">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="list-item">
                 <label>MQTT 服务器</label>
                 <div class="input-wrapper">
                     <input type="text" id="mqtt_host" placeholder="192.168.1.100">
@@ -305,6 +311,12 @@
 
         <div class="section-title">Home Assistant 连接</div>
         <div class="inset-group">
+            <div class="list-item">
+                <label>启用 HA API</label>
+                <div class="toggle-switch" id="enable_api_toggle" onclick="toggleEnableApi()">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
             <div class="list-item">
                 <label>服务器地址</label>
                 <div class="input-wrapper">
@@ -405,6 +417,8 @@
         let demoMode = false;
         let showSeconds = true;
         let useDynamicColor = false;
+        let enableMqtt = true;
+        let enableApi = true;
 
         async function loadConfig() {
             try {
@@ -431,6 +445,10 @@
                 document.getElementById('show_seconds_toggle').classList.toggle('active', showSeconds);
                 useDynamicColor = config.use_dynamic_color === true;
                 document.getElementById('use_dynamic_color_toggle').classList.toggle('active', useDynamicColor);
+                enableMqtt = config.enable_mqtt !== false;
+                document.getElementById('enable_mqtt_toggle').classList.toggle('active', enableMqtt);
+                enableApi = config.enable_api !== false;
+                document.getElementById('enable_api_toggle').classList.toggle('active', enableApi);
                 document.getElementById('card_color').value = config.card_color || '#1c1c1e';
                 document.getElementById('card_opacity').value = config.card_opacity || 1;
                 document.getElementById('opacity_value').textContent = Math.round((config.card_opacity || 1) * 100) + '%';
@@ -454,6 +472,16 @@
             useDynamicColor = !useDynamicColor;
             document.getElementById('use_dynamic_color_toggle').classList.toggle('active', useDynamicColor);
             updateDisplaySettings();
+        }
+
+        function toggleEnableMqtt() {
+            enableMqtt = !enableMqtt;
+            document.getElementById('enable_mqtt_toggle').classList.toggle('active', enableMqtt);
+        }
+
+        function toggleEnableApi() {
+            enableApi = !enableApi;
+            document.getElementById('enable_api_toggle').classList.toggle('active', enableApi);
         }
 
         function updateDisplaySettings() {
@@ -492,7 +520,9 @@
                 show_seconds: showSeconds,
                 card_color: document.getElementById('card_color').value,
                 card_opacity: parseFloat(document.getElementById('card_opacity').value),
-                use_dynamic_color: useDynamicColor
+                use_dynamic_color: useDynamicColor,
+                enable_mqtt: enableMqtt,
+                enable_api: enableApi
             };
 
             // 立即显示成功提示

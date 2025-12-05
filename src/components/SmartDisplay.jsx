@@ -44,6 +44,8 @@ const SmartDisplay = () => {
     const [cardColor, setCardColor] = useState(() => localStorage.getItem('card_color') || '#1c1c1e');
     const [cardOpacity, setCardOpacity] = useState(() => parseFloat(localStorage.getItem('card_opacity') || '1'));
     const [useDynamicColor, setUseDynamicColor] = useState(() => localStorage.getItem('use_dynamic_color') === 'true');
+    const [enableMqtt, setEnableMqtt] = useState(() => localStorage.getItem('enable_mqtt') !== 'false');
+    const [enableApi, setEnableApi] = useState(() => localStorage.getItem('enable_api') !== 'false');
     const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('config_server_url') || '');
     const [useRemoteConfig, setUseRemoteConfig] = useState(() => localStorage.getItem('use_remote_config') === 'true');
     const [deviceIP, setDeviceIP] = useState('');
@@ -88,7 +90,7 @@ const SmartDisplay = () => {
 
     // --- MQTT 连接 ---
     useEffect(() => {
-        if (config.mqtt_host) {
+        if (enableMqtt && config.mqtt_host) {
             mqttService.onConnectionChange = (connected) => {
                 setMqttConnected(connected);
                 // 当 MQTT 连接成功时，清除之前的错误提示
@@ -130,6 +132,14 @@ const SmartDisplay = () => {
                     setUseDynamicColor(update.use_dynamic_color);
                     localStorage.setItem('use_dynamic_color', update.use_dynamic_color);
                 }
+                if (update.enable_mqtt !== undefined) {
+                    setEnableMqtt(update.enable_mqtt);
+                    localStorage.setItem('enable_mqtt', update.enable_mqtt);
+                }
+                if (update.enable_api !== undefined) {
+                    setEnableApi(update.enable_api);
+                    localStorage.setItem('enable_api', update.enable_api);
+                }
             };
             mqttService.onWeatherUpdate = (update) => {
                 if (update.weather_entity) {
@@ -151,9 +161,11 @@ const SmartDisplay = () => {
                 }
             };
             mqttService.connect(config);
+        } else {
+            mqttService.disconnect();
         }
         return () => mqttService.disconnect();
-    }, [config.mqtt_host, config.mqtt_port, config.mqtt_username, config.mqtt_password]);
+    }, [enableMqtt, config.mqtt_host, config.mqtt_port, config.mqtt_username, config.mqtt_password]);
 
     // --- 同步状态到 MQTT ---
     useEffect(() => {
@@ -167,10 +179,12 @@ const SmartDisplay = () => {
                 card_color: cardColor,
                 card_opacity: cardOpacity,
                 use_dynamic_color: useDynamicColor,
+                enable_mqtt: enableMqtt,
+                enable_api: enableApi,
                 weather_entity: config.weather_entity
             });
         }
-    }, [mqttConnected, demoMode, demoState, demoFestival, displayMode, showSeconds, cardColor, cardOpacity, useDynamicColor, config.weather_entity]);
+    }, [mqttConnected, demoMode, demoState, demoFestival, displayMode, showSeconds, cardColor, cardOpacity, useDynamicColor, enableMqtt, enableApi, config.weather_entity]);
 
     // --- 1.5. 获取局域网 IP 地址 ---
     useEffect(() => {
@@ -239,7 +253,7 @@ const SmartDisplay = () => {
 
     // --- 3. 获取 Home Assistant 天气数据 ---
     useEffect(() => {
-        if (demoMode) return;
+        if (demoMode || !enableApi) return;
 
         const fetchWeather = async () => {
             if (!config.ha_url || !config.ha_token) {
@@ -303,7 +317,7 @@ const SmartDisplay = () => {
         fetchWeather();
         const weatherTimer = setInterval(fetchWeather, 600000);
         return () => clearInterval(weatherTimer);
-    }, [config, demoMode]);
+    }, [config, demoMode, enableApi]);
 
     // --- 4. 远程配置同步 ---
     useEffect(() => {
@@ -402,6 +416,14 @@ const SmartDisplay = () => {
                         if (remoteConfig.use_dynamic_color !== undefined) {
                             setUseDynamicColor(remoteConfig.use_dynamic_color);
                             localStorage.setItem('use_dynamic_color', remoteConfig.use_dynamic_color);
+                        }
+                        if (remoteConfig.enable_mqtt !== undefined) {
+                            setEnableMqtt(remoteConfig.enable_mqtt);
+                            localStorage.setItem('enable_mqtt', remoteConfig.enable_mqtt);
+                        }
+                        if (remoteConfig.enable_api !== undefined) {
+                            setEnableApi(remoteConfig.enable_api);
+                            localStorage.setItem('enable_api', remoteConfig.enable_api);
                         }
                         setFetchError(null);
                         console.log('✅ 远程配置同步完成');
@@ -979,6 +1001,8 @@ const SmartDisplay = () => {
                         cardColor={cardColor} setCardColor={setCardColor}
                         cardOpacity={cardOpacity} setCardOpacity={setCardOpacity}
                         useDynamicColor={useDynamicColor} setUseDynamicColor={setUseDynamicColor}
+                        enableMqtt={enableMqtt} setEnableMqtt={setEnableMqtt}
+                        enableApi={enableApi} setEnableApi={setEnableApi}
                         useRemoteConfig={useRemoteConfig} setUseRemoteConfig={setUseRemoteConfig}
                         deviceIP={deviceIP} editConfig={editConfig} setEditConfig={setEditConfig}
                         handleSaveConfig={handleSaveConfig} mqttConnected={mqttConnected}

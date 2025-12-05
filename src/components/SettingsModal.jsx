@@ -6,12 +6,11 @@ const SettingsModal = ({
     showSettings, setShowSettings, fetchError, demoMode, setDemoMode, demoState, setDemoState,
     demoFestival, setDemoFestival, displayMode, setDisplayMode, showSeconds, setShowSeconds,
     cardColor, setCardColor, cardOpacity, setCardOpacity, useDynamicColor, setUseDynamicColor,
+    enableMqtt, setEnableMqtt, enableApi, setEnableApi,
     useRemoteConfig, setUseRemoteConfig, deviceIP,
     editConfig, setEditConfig, handleSaveConfig, setFetchError, mqttConnected,
     syncRemoteConfig = null
 }) => {
-    const [enableMqtt, setEnableMqtt] = useState(localStorage.getItem('enable_mqtt') !== 'false');
-    const [enableApi, setEnableApi] = useState(localStorage.getItem('enable_api') !== 'false');
     const [mqttTestResult, setMqttTestResult] = useState(null);
     const [mqttTestMessage, setMqttTestMessage] = useState('');
     const [apiTestResult, setApiTestResult] = useState(null);

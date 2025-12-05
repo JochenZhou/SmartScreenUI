@@ -53,6 +53,16 @@ app.get('/api/sync-trigger', (req, res) => {
   res.json({ timestamp: syncTrigger });
 });
 
+app.get('/favicon.ico', (req, res) => {
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+<circle cx="16" cy="16" r="6" fill="#FDB813"/>
+<path d="M16 4v4M16 24v4M28 16h-4M8 16H4M24.5 7.5l-2.8 2.8M10.3 21.7l-2.8 2.8M24.5 24.5l-2.8-2.8M10.3 10.3l-2.8-2.8" stroke="#FDB813" stroke-width="2" stroke-linecap="round"/>
+</svg>`;
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.send(svg);
+});
+
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'public', 'config.html'));
 });
