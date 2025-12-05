@@ -4,17 +4,26 @@ import React, { useEffect, useState } from 'react';
 const FlipUnit = ({ value, cardColor, cardOpacity }) => {
     const [prevValue, setPrevValue] = useState(value);
     const [isFlipping, setIsFlipping] = useState(false);
+    const [digitOpacity, setDigitOpacity] = useState(1);
 
     useEffect(() => {
         if (value !== prevValue) {
-            setIsFlipping(true);
+            setDigitOpacity(0);
+            
+            const flipTimer = setTimeout(() => {
+                setIsFlipping(true);
+                setDigitOpacity(1);
+            }, 0);
 
-            const timer = setTimeout(() => {
+            const endTimer = setTimeout(() => {
                 setPrevValue(value);
                 setIsFlipping(false);
             }, 700);
 
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(flipTimer);
+                clearTimeout(endTimer);
+            };
         }
     }, [value, prevValue]);
 
@@ -36,7 +45,7 @@ const FlipUnit = ({ value, cardColor, cardOpacity }) => {
 
                 {/* Static Upper Half - shows current value top */}
                 <div className="absolute top-0 left-0 w-full h-[128px] overflow-hidden z-20 rounded-t-2xl" style={bgStyle}>
-                    <div className="absolute w-full h-[260px] top-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider">
+                    <div className="absolute w-full h-[260px] top-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider" style={{ opacity: digitOpacity, transition: 'opacity 0.05s' }}>
                         {value}
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
@@ -47,7 +56,7 @@ const FlipUnit = ({ value, cardColor, cardOpacity }) => {
 
                 {/* Static Lower Half - shows previous value bottom */}
                 <div className="absolute bottom-0 left-0 w-full h-[128px] overflow-hidden z-10 rounded-b-2xl" style={{ ...bgStyle, filter: 'brightness(0.85)' }}>
-                    <div className="absolute w-full h-[260px] bottom-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider">
+                    <div className="absolute w-full h-[260px] bottom-0 flex items-center justify-center text-[180px] font-mono font-bold text-[#e5e5e5] leading-[260px] tracking-wider" style={{ opacity: digitOpacity, transition: 'opacity 0.05s' }}>
                         {prevValue}
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
