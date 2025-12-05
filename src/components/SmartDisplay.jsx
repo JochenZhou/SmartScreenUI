@@ -325,7 +325,7 @@ const SmartDisplay = () => {
                 const startTime = Date.now();
                 console.log(`📥 ${isInitial ? '同步' : '检查'}远程配置:`, apiUrl);
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
                 const fetchOptions = {
                     method: 'GET',
                     headers: {
@@ -433,7 +433,7 @@ const SmartDisplay = () => {
                 const startTime = Date.now();
                 console.log('🔍 检查同步触发器:', apiUrl);
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
                 const fetchOptions = {
                     method: 'GET',
                     headers: {
