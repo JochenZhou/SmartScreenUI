@@ -322,6 +322,7 @@ const SmartDisplay = () => {
                     return;
                 }
 
+                const startTime = Date.now();
                 console.log(`📥 ${isInitial ? '同步' : '检查'}远程配置:`, apiUrl);
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 2000);
@@ -339,6 +340,8 @@ const SmartDisplay = () => {
                 }
                 const response = await fetch(apiUrl, fetchOptions);
                 clearTimeout(timeoutId);
+                const fetchTime = Date.now() - startTime;
+                console.log(`⏱️ loadRemoteConfig fetch 耗时: ${fetchTime}ms`);
 
                 if (response.ok) {
                     const text = await response.text();
@@ -428,6 +431,7 @@ const SmartDisplay = () => {
                 }
 
                 const checkStartTime = Date.now();
+                const startTime = Date.now();
                 console.log('🔍 检查同步触发器:', apiUrl);
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 2000);
@@ -445,6 +449,8 @@ const SmartDisplay = () => {
                 }
                 const response = await fetch(apiUrl, fetchOptions);
                 clearTimeout(timeoutId);
+                const fetchTime = Date.now() - startTime;
+                console.log(`⏱️ checkSyncTrigger fetch 耗时: ${fetchTime}ms`);
                 const fetchElapsed = Date.now() - checkStartTime;
 
                 if (response.ok) {
