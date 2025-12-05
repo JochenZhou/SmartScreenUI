@@ -22,7 +22,7 @@
         console.error('Error:', e.error);
       });
       // 只在浏览器环境中注册 Service Worker，APP 中不需要
-      if ('serviceWorker' in navigator && window.location.protocol !== 'http:' && window.location.hostname !== 'localhost') {
+      if ('serviceWorker' in navigator && !window.Capacitor) {
         navigator.serviceWorker.register('/sw.js').catch(function(e) {
           console.error('SW registration failed:', e);
         });

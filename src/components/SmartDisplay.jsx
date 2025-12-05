@@ -430,7 +430,6 @@ const SmartDisplay = () => {
                     return;
                 }
 
-                const checkStartTime = Date.now();
                 const startTime = Date.now();
                 console.log('🔍 检查同步触发器:', apiUrl);
                 const controller = new AbortController();
@@ -451,11 +450,10 @@ const SmartDisplay = () => {
                 clearTimeout(timeoutId);
                 const fetchTime = Date.now() - startTime;
                 console.log(`⏱️ checkSyncTrigger fetch 耗时: ${fetchTime}ms`);
-                const fetchElapsed = Date.now() - checkStartTime;
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log(`📊 服务器时间戳: ${data.timestamp}, 本地时间戳: ${lastSyncTriggerRef.current} (请求耗时: ${fetchElapsed}ms)`);
+                    console.log(`📊 服务器时间戳: ${data.timestamp}, 本地时间戳: ${lastSyncTriggerRef.current}`);
 
                     // 如果是第一次检查（lastSyncTrigger为0），记录时间戳但也触发一次同步确保配置最新
                     if (lastSyncTriggerRef.current === 0) {
