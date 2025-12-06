@@ -1,6 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { extractDominantColor } from '../utils/colorExtractor';
 
+// 性能检测
+const getDevicePerformance = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    const isOldDevice = /android [4-7]/.test(ua) || window.innerWidth < 1024;
+    return isOldDevice ? 'low' : 'high';
+};
+
+const PERFORMANCE = getDevicePerformance();
+
 // 导出函数以便其他组件使用
 export const getWeatherGradient = (key) => {
     switch (true) {
@@ -75,7 +84,7 @@ const WeatherBackground = ({ weatherKey, festival }) => {
         return null;
     };
 
-    const stars = useMemo(() => Array.from({ length: 60 }).map((_, i) => ({
+    const stars = useMemo(() => Array.from({ length: PERFORMANCE === 'low' ? 30 : 60 }).map((_, i) => ({
         id: i, left: `${Math.random() * 100}%`, top: `${Math.random() * 80}%`,
         size: Math.random() * 2 + 1, delay: Math.random() * 5, duration: Math.random() * 3 + 3
     })), []);
@@ -115,11 +124,11 @@ const WeatherBackground = ({ weatherKey, festival }) => {
     };
 
     const rainParticles = useMemo(() => ({
-        far: Array.from({ length: 200 }).map((_, i) => ({ id: i, left: Math.random() * 100, top: Math.random() * -100, duration: Math.random() * 0.5 + 0.5 })),
-        near: Array.from({ length: 100 }).map((_, i) => ({ id: i, left: Math.random() * 100, top: Math.random() * -100, duration: Math.random() * 0.3 + 0.3 }))
+        far: Array.from({ length: PERFORMANCE === 'low' ? 50 : 200 }).map((_, i) => ({ id: i, left: Math.random() * 100, top: Math.random() * -100, duration: Math.random() * 0.5 + 0.5 })),
+        near: Array.from({ length: PERFORMANCE === 'low' ? 25 : 100 }).map((_, i) => ({ id: i, left: Math.random() * 100, top: Math.random() * -100, duration: Math.random() * 0.3 + 0.3 }))
     }), []);
 
-    const snowParticles = useMemo(() => Array.from({ length: 150 }).map((_, i) => ({
+    const snowParticles = useMemo(() => Array.from({ length: PERFORMANCE === 'low' ? 40 : 150 }).map((_, i) => ({
         id: i, left: Math.random() * 100, size: Math.random() * 4 + 2, blur: Math.random() * 1.5,
         opacity: Math.random() * 0.5 + 0.5, duration: Math.random() * 5 + 5, delay: -(Math.random() * 10), sway: Math.random() * 60 - 30
     })), []);
@@ -127,19 +136,20 @@ const WeatherBackground = ({ weatherKey, festival }) => {
     const renderPrecipitation = (key) => {
         let rainCount = 0, snowCount = 0, rainDuration = 1.0, rainAngle = 10;
         if (key.includes('RAIN') || key === 'SLEET' || key.includes('THUNDER') || key === 'HAIL' || key.includes('SNOW')) {
-            if (key === 'LIGHT_RAIN') { rainCount = 30; rainDuration = 1.5; }
-            else if (key === 'MODERATE_RAIN') { rainCount = 80; rainDuration = 1.0; }
-            else if (key === 'HEAVY_RAIN') { rainCount = 150; rainDuration = 0.7; }
-            else if (key === 'STORM_RAIN' || key.includes('THUNDER')) { rainCount = 200; rainDuration = 0.5; rainAngle = 25; }
-            else if (key === 'HAIL') { rainCount = 80; rainDuration = 1.5; }
-            else if (key === 'SLEET') { rainCount = 40; rainDuration = 1.0; }
+            const multiplier = PERFORMANCE === 'low' ? 0.3 : 1;
+            if (key === 'LIGHT_RAIN') { rainCount = Math.floor(30 * multiplier); rainDuration = 1.5; }
+            else if (key === 'MODERATE_RAIN') { rainCount = Math.floor(80 * multiplier); rainDuration = 1.0; }
+            else if (key === 'HEAVY_RAIN') { rainCount = Math.floor(150 * multiplier); rainDuration = 0.7; }
+            else if (key === 'STORM_RAIN' || key.includes('THUNDER')) { rainCount = Math.floor(200 * multiplier); rainDuration = 0.5; rainAngle = 25; }
+            else if (key === 'HAIL') { rainCount = Math.floor(80 * multiplier); rainDuration = 1.5; }
+            else if (key === 'SLEET') { rainCount = Math.floor(40 * multiplier); rainDuration = 1.0; }
 
             if (key.includes('SNOW') || key === 'SLEET') {
-                if (key === 'LIGHT_SNOW') snowCount = 20;
-                else if (key === 'MODERATE_SNOW') snowCount = 60;
-                else if (key === 'HEAVY_SNOW' || key === 'STORM_SNOW') snowCount = 120;
-                else if (key === 'SLEET') snowCount = 30;
-                else snowCount = 50;
+                if (key === 'LIGHT_SNOW') snowCount = Math.floor(20 * multiplier);
+                else if (key === 'MODERATE_SNOW') snowCount = Math.floor(60 * multiplier);
+                else if (key === 'HEAVY_SNOW' || key === 'STORM_SNOW') snowCount = Math.floor(120 * multiplier);
+                else if (key === 'SLEET') snowCount = Math.floor(30 * multiplier);
+                else snowCount = Math.floor(50 * multiplier);
             }
 
             const elements = [];
@@ -199,32 +209,32 @@ const WeatherBackground = ({ weatherKey, festival }) => {
     };
 
     const festivalParticles = useMemo(() => ({
-        lanterns: Array.from({ length: 8 }).map((_, i) => ({
+        lanterns: Array.from({ length: PERFORMANCE === 'low' ? 4 : 8 }).map((_, i) => ({
             id: i, left: Math.random() * 80, size: Math.random() * 25 + 20, duration: Math.random() * 10 + 20, delay: Math.random() * 10, opacity: Math.random() * 0.3 + 0.6,
             icon: ['🏮', '🧧', '🧨'][Math.floor(Math.random() * 3)]
         })),
-        hearts: Array.from({ length: 10 }).map((_, i) => ({
+        hearts: Array.from({ length: PERFORMANCE === 'low' ? 5 : 10 }).map((_, i) => ({
             id: i, left: Math.random() * 80, size: Math.random() * 15 + 15, duration: Math.random() * 8 + 12, delay: Math.random() * 10,
             icon: ['❤️', '🌹', '💐'][Math.floor(Math.random() * 3)]
         })),
-        christmas: Array.from({ length: 15 }).map((_, i) => ({
+        christmas: Array.from({ length: PERFORMANCE === 'low' ? 8 : 15 }).map((_, i) => ({
             id: i, left: Math.random() * 80, top: Math.random() * 40 + 60, size: Math.random() * 20 + 10, duration: Math.random() * 5 + 5,
             icon: ['🎄', '🌟', '❄️', '🎁'][Math.floor(Math.random() * 4)]
         })),
-        willowLeaves: Array.from({ length: 12 }).map((_, i) => ({ id: i, left: Math.random() * 80, delay: Math.random() * 5, duration: Math.random() * 4 + 4, size: Math.random() * 10 + 5 })),
-        dragonBoat: Array.from({ length: 10 }).map((_, i) => ({
+        willowLeaves: Array.from({ length: PERFORMANCE === 'low' ? 6 : 12 }).map((_, i) => ({ id: i, left: Math.random() * 80, delay: Math.random() * 5, duration: Math.random() * 4 + 4, size: Math.random() * 10 + 5 })),
+        dragonBoat: Array.from({ length: PERFORMANCE === 'low' ? 5 : 10 }).map((_, i) => ({
             id: i, left: Math.random() * 80, top: Math.random() * 80, rotate: Math.random() * 360, duration: Math.random() * 10 + 10,
             icon: ['🎋', '🍙', '🐉'][Math.floor(Math.random() * 3)]
         })),
-        midAutumn: Array.from({ length: 8 }).map((_, i) => ({
+        midAutumn: Array.from({ length: PERFORMANCE === 'low' ? 4 : 8 }).map((_, i) => ({
             id: i, left: Math.random() * 80, size: Math.random() * 20 + 15, duration: Math.random() * 15 + 20, delay: Math.random() * 10,
             icon: ['🥮', '🐇', '🏮'][Math.floor(Math.random() * 3)]
         })),
-        balloons: Array.from({ length: 10 }).map((_, i) => ({
+        balloons: Array.from({ length: PERFORMANCE === 'low' ? 5 : 10 }).map((_, i) => ({
             id: i, left: Math.random() * 80, size: Math.random() * 20 + 20, duration: Math.random() * 8 + 10, delay: Math.random() * 5,
             icon: ['🎈', '🍭', '🧸'][Math.floor(Math.random() * 3)]
         })),
-        halloween: Array.from({ length: 8 }).map((_, i) => ({
+        halloween: Array.from({ length: PERFORMANCE === 'low' ? 4 : 8 }).map((_, i) => ({
             id: i, left: Math.random() * 80, size: Math.random() * 20 + 20, duration: Math.random() * 10 + 15, delay: Math.random() * 10,
             icon: ['🎃', '👻', '🕸️'][Math.floor(Math.random() * 3)]
         }))
