@@ -38,11 +38,11 @@ jobs:
           npx cap add android
         fi
     
-    - name: Sync Capacitor
-      run: npx cap sync android
-
     - name: Update version
       run: npm run update-version
+    
+    - name: Sync Capacitor
+      run: npx cap sync android
 
     - name: Generate app icons
       run: npm run generate-icons

@@ -228,6 +228,64 @@
             background: rgba(255, 59, 48, 0.9);
             color: white;
         }
+
+        /* Segmented Control */
+        .segmented-control {
+            display: flex;
+            background-color: #e9e9ea;
+            padding: 2px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .segmented-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .segmented-btn.active {
+            background-color: white;
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Info Alert */
+        .info-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 10px 12px;
+            background-color: rgba(0, 122, 255, 0.1);
+            border: 1px solid rgba(0, 122, 255, 0.2);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-alert svg {
+            color: var(--blue);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .info-alert p {
+            font-size: 12px;
+            color: #0040dd;
+            line-height: 1.4;
+            margin: 0;
+            opacity: 0.8;
+        }
     </style>
 </head>
 
@@ -270,75 +328,95 @@
                 <label>卡片透明度</label>
                 <div class="input-wrapper">
                     <input type="range" id="card_opacity" min="0" max="1" step="0.05" value="1" style="width: 100px;">
-                    <span id="opacity_value" style="margin-left: 10px; color: var(--blue); font-size: 14px; min-width: 40px;">100%</span>
+                    <span id="opacity_value"
+                        style="margin-left: 10px; color: var(--blue); font-size: 14px; min-width: 40px;">100%</span>
                 </div>
             </div>
         </div>
 
-        <div class="section-title">MQTT 连接</div>
-        <div class="inset-group">
-            <div class="list-item">
-                <label>启用 MQTT</label>
-                <div class="toggle-switch" id="enable_mqtt_toggle" onclick="toggleEnableMqtt()">
-                    <div class="toggle-knob"></div>
-                </div>
+        <div class="section-title">天气数据源</div>
+        <div class="inset-group" style="background: transparent;">
+            <div class="segmented-control">
+                <button class="segmented-btn" id="btn_source_ha" onclick="setDataSource('ha')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    Home Assistant
+                </button>
+                <button class="segmented-btn" id="btn_source_mqtt" onclick="setDataSource('mqtt')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                        <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                        <line x1="12" y1="20" x2="12.01" y2="20" />
+                    </svg>
+                    MQTT 服务
+                </button>
             </div>
-            <div class="list-item">
-                <label>MQTT 服务器</label>
-                <div class="input-wrapper">
-                    <input type="text" id="mqtt_host" placeholder="192.168.1.100">
-                </div>
+            <div class="info-alert">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4" />
+                    <path d="M12 8h.01" />
+                </svg>
+                <p>请选择数据源。为避免重复配置，切换模式将自动禁用另一种。</p>
             </div>
-            <div class="list-item">
-                <label>WebSocket 端口</label>
-                <div class="input-wrapper">
-                    <input type="text" id="mqtt_port" placeholder="1884">
+        </div>
+
+        <div id="section_ha">
+            <div class="section-title">Home Assistant 配置</div>
+            <div class="inset-group">
+                <div class="list-item">
+                    <label>服务器地址</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="ha_url" placeholder="http://192.168.1.x:8123">
+                    </div>
                 </div>
-            </div>
-            <div class="list-item">
-                <label>用户名</label>
-                <div class="input-wrapper">
-                    <input type="text" id="mqtt_username" placeholder="可选">
+                <div class="list-item">
+                    <label>访问令牌</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="ha_token" placeholder="Long-lived Access Token">
+                    </div>
                 </div>
-            </div>
-            <div class="list-item">
-                <label>密码</label>
-                <div class="input-wrapper">
-                    <input type="password" id="mqtt_password" placeholder="可选">
+                <div class="list-item">
+                    <label>天气实体</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="weather_entity" placeholder="weather.home">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="section-title">Home Assistant 连接</div>
-        <div class="inset-group">
-            <div class="list-item">
-                <label>启用 HA API</label>
-                <div class="toggle-switch" id="enable_api_toggle" onclick="toggleEnableApi()">
-                    <div class="toggle-knob"></div>
+        <div id="section_mqtt" style="display: none;">
+            <div class="section-title">MQTT 配置</div>
+            <div class="inset-group">
+                <div class="list-item">
+                    <label>MQTT 服务器</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="mqtt_host" placeholder="192.168.1.100">
+                    </div>
                 </div>
-            </div>
-            <div class="list-item">
-                <label>服务器地址</label>
-                <div class="input-wrapper">
-                    <input type="text" id="ha_url" placeholder="http://192.168.1.x:8123">
+                <div class="list-item">
+                    <label>WebSocket 端口</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="mqtt_port" placeholder="1884">
+                    </div>
                 </div>
-            </div>
-            <div class="list-item">
-                <label>访问令牌</label>
-                <div class="input-wrapper">
-                    <input type="password" id="ha_token" placeholder="Long-lived Access Token">
+                <div class="list-item">
+                    <label>用户名</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="mqtt_username" placeholder="可选">
+                    </div>
                 </div>
-            </div>
-            <div class="list-item">
-                <label>天气实体</label>
-                <div class="input-wrapper">
-                    <input type="text" id="weather_entity" placeholder="weather.home">
-                </div>
-            </div>
-            <div class="list-item">
-                <label>位置名称</label>
-                <div class="input-wrapper">
-                    <input type="text" id="location_name" placeholder="例如：客厅">
+                <div class="list-item">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="mqtt_password" placeholder="可选">
+                    </div>
                 </div>
             </div>
         </div>
@@ -417,7 +495,7 @@
         let demoMode = false;
         let showSeconds = true;
         let useDynamicColor = false;
-        let enableMqtt = true;
+        let enableMqtt = false;
         let enableApi = true;
 
         async function loadConfig() {
@@ -431,7 +509,6 @@
                 document.getElementById('ha_url').value = config.ha_url || '';
                 document.getElementById('ha_token').value = config.ha_token || '';
                 document.getElementById('weather_entity').value = config.weather_entity || 'weather.forecast_home';
-                document.getElementById('location_name').value = config.location_name || '北京市';
                 document.getElementById('mqtt_host').value = config.mqtt_host || '';
                 document.getElementById('mqtt_port').value = config.mqtt_port || '1884';
                 document.getElementById('mqtt_username').value = config.mqtt_username || '';
@@ -445,13 +522,18 @@
                 document.getElementById('show_seconds_toggle').classList.toggle('active', showSeconds);
                 useDynamicColor = config.use_dynamic_color === true;
                 document.getElementById('use_dynamic_color_toggle').classList.toggle('active', useDynamicColor);
-                enableMqtt = config.enable_mqtt !== false;
-                document.getElementById('enable_mqtt_toggle').classList.toggle('active', enableMqtt);
-                enableApi = config.enable_api !== false;
-                document.getElementById('enable_api_toggle').classList.toggle('active', enableApi);
                 document.getElementById('card_color').value = config.card_color || '#1c1c1e';
                 document.getElementById('card_opacity').value = config.card_opacity || 1;
                 document.getElementById('opacity_value').textContent = Math.round((config.card_opacity || 1) * 100) + '%';
+
+                // Initial Data Source State
+                // Default to HA if nothing set or HA set
+                if (config.enable_mqtt === true) {
+                    setDataSource('mqtt');
+                } else {
+                    setDataSource('ha');
+                }
+
                 updateDisplaySettings();
             } catch (error) {
                 showStatus('❌ 加载配置失败', 'error');
@@ -474,14 +556,27 @@
             updateDisplaySettings();
         }
 
-        function toggleEnableMqtt() {
-            enableMqtt = !enableMqtt;
-            document.getElementById('enable_mqtt_toggle').classList.toggle('active', enableMqtt);
-        }
+        function setDataSource(source) {
+            const haBtn = document.getElementById('btn_source_ha');
+            const mqttBtn = document.getElementById('btn_source_mqtt');
+            const haSection = document.getElementById('section_ha');
+            const mqttSection = document.getElementById('section_mqtt');
 
-        function toggleEnableApi() {
-            enableApi = !enableApi;
-            document.getElementById('enable_api_toggle').classList.toggle('active', enableApi);
+            if (source === 'ha') {
+                enableApi = true;
+                enableMqtt = false;
+                haBtn.classList.add('active');
+                mqttBtn.classList.remove('active');
+                haSection.style.display = 'block';
+                mqttSection.style.display = 'none';
+            } else {
+                enableApi = false;
+                enableMqtt = true;
+                mqttBtn.classList.add('active');
+                haBtn.classList.remove('active');
+                mqttSection.style.display = 'block';
+                haSection.style.display = 'none';
+            }
         }
 
         function updateDisplaySettings() {
@@ -508,7 +603,6 @@
                 ha_url: document.getElementById('ha_url').value,
                 ha_token: document.getElementById('ha_token').value,
                 weather_entity: document.getElementById('weather_entity').value,
-                location_name: document.getElementById('location_name').value,
                 mqtt_host: document.getElementById('mqtt_host').value,
                 mqtt_port: document.getElementById('mqtt_port').value,
                 mqtt_username: document.getElementById('mqtt_username').value,
@@ -549,7 +643,7 @@
         document.getElementById('display_mode').addEventListener('change', updateDisplaySettings);
 
         // 添加透明度值显示更新
-        document.getElementById('card_opacity').addEventListener('input', function(e) {
+        document.getElementById('card_opacity').addEventListener('input', function (e) {
             const percentage = Math.round(e.target.value * 100);
             document.getElementById('opacity_value').textContent = percentage + '%';
         });

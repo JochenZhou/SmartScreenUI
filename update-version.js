@@ -1,35 +1,30 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 
 const BUILD_GRADLE = 'android/app/build.gradle';
+const PACKAGE_JSON = 'package.json';
 
-if (existsSync(BUILD_GRADLE)) {
+if (existsSync(BUILD_GRADLE) && existsSync(PACKAGE_JSON)) {
+  const packageJson = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8'));
+  const version = packageJson.version;
+  
+  // 从版本号生成 versionCode (例如: 1.2.3 -> 10203)
+  const [major, minor, patch] = version.split('.').map(Number);
+  const versionCode = major * 10000 + minor * 100 + patch;
+  
   let gradle = readFileSync(BUILD_GRADLE, 'utf8');
   
-  let newVersionCode = 1;
-  let newVersionName = '1.0.0';
-  
-  // 增加 versionCode
   gradle = gradle.replace(
-    /versionCode\s+(\d+)/,
-    (match, code) => {
-      newVersionCode = parseInt(code) + 1;
-      return `versionCode ${newVersionCode}`;
-    }
+    /versionCode\s+\d+/,
+    `versionCode ${versionCode}`
   );
   
-  // 自动递增 versionName (基于 versionCode)
-  const major = 1;
-  const minor = Math.floor(newVersionCode / 100);
-  const patch = newVersionCode % 100;
-  newVersionName = `${major}.${minor}.${patch}`;
-  
   gradle = gradle.replace(
-    /versionName\s+"([^"]+)"/,
-    `versionName "${newVersionName}"`
+    /versionName\s+"[^"]+"/,
+    `versionName "${version}"`
   );
   
   writeFileSync(BUILD_GRADLE, gradle, 'utf8');
-  console.log(`✅ Android version updated: ${newVersionName} (${newVersionCode})`);
+  console.log(`✅ Android version updated: ${version} (${versionCode})`);
 } else {
-  console.log('⚠️  build.gradle not found');
+  console.log('⚠️  build.gradle or package.json not found');
 }

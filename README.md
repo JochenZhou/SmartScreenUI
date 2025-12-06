@@ -1,40 +1,77 @@
-# SmartScreenUI - Docker 部署指南
+# HA Weather Screen (HA 天气屏)
 
-## 使用 Docker Compose（推荐）
+一个专为 Home Assistant 设计的现代化、高颜值天气信息展示屏。支持多种显示模式、动态天气背景、节日特效以及深色模式。
+
+## ✨ 主要功能
+
+*   **多模态显示**:
+    *   📅 **日历模式**: 显示农历、日期、时间及天气概览。
+    *   ⏰ **翻页时钟**: 全屏复古翻页时钟，支持秒数显示。
+*   **沉浸式天气**:
+    *   根据实时天气自动切换动态背景（晴天、雨、雪、雾霾等）。
+    *   支持“动态跟随颜色”，UI 主色调随天气背景自动调整。
+*   **双数据源支持**:
+    *   🏠 **Home Assistant API**: 直接连接 HA 获取数据。
+    *   📡 **MQTT 服务**: 适用于无法直接连接 HA 的场景。
+*   **个性化定制**:
+    *   🌗 **深色/浅色模式**: 自动或手动切换主题。
+    *   🎉 **节日特效**: 内置春节、圣诞等多种节日氛围特效。
+    *   🔧 **远程配置**: 支持通过网页端远程管理设备配置。
+
+## � 下载 APP
+
+本项目的最新 Android 客户端构建产物可直接在 GitHub Actions 中下载：
+
+1.  点击仓库上方的 **Actions** 标签。
+2.  选择最新的 **Build Android App** 工作流运行记录。
+3.  在 Artifacts 区域下载 **app-release** 压缩包。
+
+## �🚀 快速开始
+
+### 1. 开发环境运行
+
+需要 Node.js 环境。
 
 ```bash
-# 启动
-docker-compose up -d
+# 安装依赖
+npm install
 
-# 停止
-docker-compose down
-
-# 重新构建并启动
-docker-compose up -d --build
+# 启动开发服务器
+npm run dev
 ```
 
-访问：http://your-server-ip:8080
-
-## 使用 Docker 命令
+### 2. 构建生产版本
 
 ```bash
-# 构建镜像
-docker build -t smartscreen-ui .
-
-# 运行容器
-docker run -d -p 8080:80 --name smartscreen smartscreen-ui
-
-# 停止和删除
-docker stop smartscreen
-docker rm smartscreen
+# 构建 Web 应用
+npm run build
 ```
 
-## 导出镜像（可选）
+构建产物将位于 `dist` 目录。
 
-```bash
-# 导出镜像
-docker save -o smartscreen-ui.tar smartscreen-ui
+## ⚙️ 配置指南
 
-# 在目标服务器导入
-docker load -i smartscreen-ui.tar
-```
+点击屏幕左下角或使用齿轮图标进入设置：
+
+1.  **常规**: 切换深色模式，开启演示模式预览特效。
+2.  **显示与外观**: 切换日历/时钟模式，调整卡片透明度等。
+3.  **网络与远程**:
+    *   **Home Assistant**: 输入 HA 地址 (e.g., `http://192.168.1.100:8123`) 和长效访问令牌。
+    *   **MQTT**: 配置 MQTT 服务器地址、端口、用户名和密码。
+    *   **远程同步**: 开启后可通过生成的二维码或 URL 在手机/电脑上远程修改配置。
+
+## 📱 移动端/平板适配
+
+本项目采用响应式设计，完美适配 iPad、安卓平板及各种嵌入式屏幕。
+
+## 🛠️ 技术栈
+
+*   [React](https://react.dev/)
+*   [Vite](https://vitejs.dev/)
+*   [Tailwind CSS](https://tailwindcss.com/)
+*   [Lucide React](https://lucide.dev/) (图标)
+*   [MQTT.js](https://github.com/mqttjs/MQTT.js)
+
+## 📄 开源协议
+
+MIT License

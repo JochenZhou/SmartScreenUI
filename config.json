@@ -2,7 +2,6 @@
   "ha_url": "http://192.168.101.75:8123",
   "ha_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2MDg4OTYwZTdhNDI0OTAzYWRlNTVlMmZlMDFlOTM0MCIsImlhdCI6MTc2NDExOTYwMywiZXhwIjoyMDc5NDc5NjAzfQ.0uJopptOy4Pr4KgaeKPFUcGo2CPMAKg5iqPNTR8lxd4",
   "weather_entity": "weather.wo_de_jia_2",
-  "location_name": "康桥公馆213",
   "mqtt_host": "192.168.101.75",
   "mqtt_port": "1884",
   "mqtt_username": "zhou",
@@ -15,6 +14,6 @@
   "card_color": "#1b2231",
   "card_opacity": 0.85,
   "use_dynamic_color": true,
-  "enable_mqtt": true,
+  "enable_mqtt": false,
   "enable_api": true
 }
