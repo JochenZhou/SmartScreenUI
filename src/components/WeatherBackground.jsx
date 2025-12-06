@@ -4,7 +4,9 @@ import { extractDominantColor } from '../utils/colorExtractor';
 // 性能检测
 const getDevicePerformance = () => {
     const ua = navigator.userAgent.toLowerCase();
-    const isOldDevice = /android [4-7]/.test(ua) || window.innerWidth < 1024;
+    const match = ua.match(/android (\d+)/);
+    const androidVersion = match ? parseInt(match[1]) : 999;
+    const isOldDevice = (androidVersion >= 4 && androidVersion <= 6) || window.innerWidth < 1024;
     return isOldDevice ? 'low' : 'high';
 };
 
