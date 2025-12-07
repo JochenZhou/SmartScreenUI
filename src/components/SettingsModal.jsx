@@ -170,21 +170,23 @@ const SettingsModal = ({
             />
 
             {/* Modal Window - Responsive Optimization */}
-            {/* Modal Window - Responsive Optimization */}
-            <div className="relative w-[95%] h-[90%] md:w-[850px] md:h-[600px] max-w-5xl max-h-[85vh] bg-white/90 dark:bg-[#1c1c1e]/90 backdrop-blur-xl md:rounded-2xl border border-black/10 dark:border-white/10 shadow-2xl flex overflow-hidden transition-all duration-300 text-gray-900 dark:text-white">
+            <div className="relative w-[98%] h-[90%] sm:w-[90%] sm:max-w-[750px] sm:h-[96%] md:w-[850px] md:h-[600px] max-w-5xl max-h-[96vh] bg-white/90 dark:bg-[#1c1c1e]/90 backdrop-blur-xl md:rounded-2xl border border-black/10 dark:border-white/10 shadow-2xl flex overflow-hidden transition-all duration-300 text-gray-900 dark:text-white">
 
                 {/* Sidebar */}
-                <div className="w-[260px] bg-gray-50/50 dark:bg-[#2c2c2e]/50 border-r border-black/5 dark:border-white/5 flex flex-col shrink-0">
-                    <div className="p-6 pb-4">
+                <div className="w-[70px] md:w-[260px] bg-gray-50/50 dark:bg-[#2c2c2e]/50 border-r border-black/5 dark:border-white/5 flex flex-col shrink-0">
+                    <div className="p-6 pb-4 hidden md:block">
                         <h2 className="text-[22px] font-bold text-gray-900 dark:text-white tracking-tight">设置</h2>
                     </div>
+                    <div className="p-3 pb-2 md:hidden">
+                        <Settings size={20} className="text-gray-900 dark:text-white mx-auto" />
+                    </div>
 
-                    <div className="flex-1 overflow-y-auto px-3 space-y-1">
+                    <div className="flex-1 overflow-y-auto px-2 md:px-3 space-y-1">
                         {navItems.map((item) => (
                             <button
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
-                                className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all duration-200 ${activeTab === item.id
+                                className={`w-full flex items-center md:gap-3 p-2 rounded-lg transition-all duration-200 justify-center md:justify-start ${activeTab === item.id
                                     ? 'bg-[#0a84ff] text-white shadow-sm'
                                     : 'text-gray-500 dark:text-[#8e8e93] hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
                                     }`}
@@ -192,7 +194,7 @@ const SettingsModal = ({
                                 <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${activeTab === item.id ? 'bg-white/20' : item.color}`}>
                                     <item.icon size={16} className="text-white" />
                                 </div>
-                                <span className="text-[15px] font-medium">{item.label}</span>
+                                <span className="text-[15px] font-medium hidden md:inline">{item.label}</span>
                             </button>
                         ))}
                     </div>
@@ -233,10 +235,10 @@ const SettingsModal = ({
                             {/* Error Alert */}
                             {fetchError && (
                                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3 mb-6 animate-in slide-in-from-top-2">
-                                    <AlertTriangle className="text-red-400 shrink-0" size={20} />
+                                    <AlertTriangle className="text-red-600 dark:text-red-400 shrink-0" size={20} />
                                     <div className="text-[15px] space-y-1">
-                                        <p className="font-semibold text-red-400">连接错误</p>
-                                        <p className="text-red-200/80 leading-snug">{fetchError}</p>
+                                        <p className="font-semibold text-red-600 dark:text-red-400">连接错误</p>
+                                        <p className="text-red-700 dark:text-red-200/80 leading-snug">{fetchError}</p>
                                     </div>
                                 </div>
                             )}
@@ -639,6 +641,12 @@ const SettingsModal = ({
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
+                                            <div className="flex items-start gap-2 px-3 py-2 mx-1 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                                <Info size={13} className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                                                <p className="text-[12px] text-blue-600 dark:text-blue-200/80 leading-snug">
+                                                    MQTT 配置提示：主机地址填写 MQTT 服务器 IP，端口默认为 1884（WebSocket）。如需认证请填写用户名和密码。
+                                                </p>
                                             </div>
                                         </div>
                                     )}

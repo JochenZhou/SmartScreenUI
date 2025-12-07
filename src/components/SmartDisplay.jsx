@@ -259,7 +259,7 @@ const SmartDisplay = () => {
             if (!config.ha_url || !config.ha_token) {
                 // 如果 MQTT 已连接，就不显示错误提示
                 if (!mqttConnected) {
-                    setFetchError("请先配置 HA 地址和 Token");
+                    setFetchError("请先配置 HA 地址和 Token 或 MQTT");
                 }
                 return;
             }

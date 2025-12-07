@@ -14,6 +14,6 @@
   "card_color": "#1b2231",
   "card_opacity": 0.85,
   "use_dynamic_color": true,
-  "enable_mqtt": false,
-  "enable_api": true
+  "enable_mqtt": true,
+  "enable_api": false
 }
