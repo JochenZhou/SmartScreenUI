@@ -1,6 +1,6 @@
 blueprint:
-  name: SmartScreen 天气数据推送
-  description: 将天气实体数据通过 MQTT 推送到 SmartScreen
+  name: HA天气屏 天气数据推送
+  description: 将天气实体数据通过 MQTT 推送到 HA天气屏
   domain: automation
   input:
     weather_entity:
@@ -17,13 +17,10 @@ blueprint:
         text:
     update_interval:
       name: 更新间隔（分钟）
-      description: 定时推送的间隔时间
-      default: 10
+      description: 时间模式间隔，例如 "/5" 代表每5分钟，"/10" 代表每10分钟
+      default: /10
       selector:
-        number:
-          min: 1
-          max: 60
-          unit_of_measurement: 分钟
+        text:
 
 trigger:
   - platform: state
